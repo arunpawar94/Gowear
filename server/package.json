@@ -1,0 +1,8 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "Gowear is a leading E-commerce website.",
+  "main": "index.js",
+  "author": "Arun Pawar",
+  "license": "MIT"
+}
