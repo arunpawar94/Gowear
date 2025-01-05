@@ -4,5 +4,22 @@
   "description": "Gowear is a leading E-commerce website.",
   "main": "index.js",
   "author": "Arun Pawar",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "typescript": "^5.7.2"
+  },
+  "type": "esmodule",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:dev": "nodemon dist/index.js",
+    "start:ts": "ts-node src/index.ts",
+    "start:nodemonts": "nodemon src/index.ts"
+
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "ts-node": "^10.9.2"
+  }
 }
