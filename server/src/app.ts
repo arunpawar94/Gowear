@@ -1,13 +1,14 @@
-import express, {Request, Response} from "express";
+import express from "express";
 import connectDB from './config/db';
+import userRoutes from './routers/user';
 
 const app = express();
 
+app.use(express.json());
+
 connectDB();
 
-app.get("/", (req: Request, res: Response) => {
-    res.send("Hi from server side again");
-});
+app.use('/users', userRoutes);
 
 app.listen(process.env.PORT, ()=> {
     console.log("Server is running")
