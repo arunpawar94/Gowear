@@ -53,7 +53,7 @@ const Header: React.FC = () => {
         />
       </Box>
       {loggedIn ? (
-        <IconButton aria-label="cart">
+        <IconButton aria-label="cart" title="Go to Cart">
           <Badge badgeContent={sharedState} sx={webStyle.badgeCountStyle}>
             <ShoppingCartIcon style={{ color: primaryColor }} />
           </Badge>
