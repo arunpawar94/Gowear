@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Typography, styled } from "@mui/material";
+import { Box, Typography, styled, Grid2 as Grid } from "@mui/material";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
 import { setSharedState } from "../../redux/sharedSlice";
@@ -11,6 +11,8 @@ import image4 from "../../assets/photo-1483985988355-763728e1935b.jpeg";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+
+import CartBox from "../../components/CartBox";
 
 const Home: React.FC = () => {
   const sharedState = useSelector((state: RootState) => state.shared.cartCount);
@@ -29,22 +31,15 @@ const Home: React.FC = () => {
       slidesToScroll: 1,
       autoplay: true,
       autoplaySpeed: 2000,
+      arrows: false,
       appendDots: (dots: React.ReactNode[]) => <StyledDots>{dots}</StyledDots>,
     };
     return (
-      <StyledSliderWrapper style={webStyle.mainCarouselBox}>
+      <StyledSliderWrapper>
         <Slider {...settings}>
           {[image1, image2, image3, image4].map((item, index) => (
             <Box key={index} style={{ border: "1px solid green" }}>
-              <img
-                style={{
-                  width: "100%",
-                  height: "500px",
-                  objectFit: "cover",
-                  objectPosition: "top",
-                }}
-                src={item}
-              />
+              <img style={webStyle.carouselImage} src={item} />
             </Box>
           ))}
         </Slider>
@@ -52,35 +47,24 @@ const Home: React.FC = () => {
     );
   };
 
-  const renderItemCarousel = () => {
-    const settings = {
-      dots: true,
-      infinite: true,
-      speed: 500,
-      slidesToShow: 1,
-      slidesToScroll: 1,
-      arrows: true,
-    };
+  const renderCartBox = () => {
     return (
-      <Box>
-        <Typography>Top wears</Typography>
-        <Slider {...settings}>
-          {Array(5)
-            .fill(null)
-            .map((_item, index) => (
-              <Box style={webStyle.itemBox} key={index}>
-                {index}
-              </Box>
-            ))}
-        </Slider>
-      </Box>
+      <GridContainer container spacing={3}>
+        {Array(10)
+          .fill(null)
+          .map((_item, index) => (
+            <Grid size={{ xs: 12, sm: 4, md: 3, lg: 2.4 }} key={index}>
+              <CartBox />
+            </Grid>
+          ))}
+      </GridContainer>
     );
   };
 
   return (
     <Box>
       {renderCarousel()}
-      {renderItemCarousel()}
+      {renderCartBox()}
     </Box>
   );
 };
@@ -91,21 +75,35 @@ const StyledSliderWrapper = styled("div")({
   width: "80%",
   margin: "0 auto",
   position: "relative",
+  "@media (max-width: 900px)": {
+    width: "100%",
+  },
 });
 
 const StyledDots = styled("ul")({
   position: "absolute",
-  bottom: "12px !important"
+  bottom: "12px !important",
+});
+
+const GridContainer = styled(Grid)({
+  maxWidth: "85%",
+  margin: "20px auto",
+  "@media (max-width: 900px)": {
+    maxWidth: "100%",
+    margin: "20px",
+  },
 });
 
 const webStyle = {
-  mainCarouselBox: {
-    width: "80%",
-    margin: "0 auto",
-  } as React.CSSProperties,
   itemBox: {
     width: "100px",
     height: "100px",
     border: "1px solid red",
   },
+  carouselImage: {
+    width: "100%",
+    aspectRatio: "954/500",
+    objectFit: "cover",
+    objectPosition: "top",
+  } as React.CSSProperties,
 };
