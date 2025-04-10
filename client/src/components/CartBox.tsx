@@ -80,9 +80,10 @@ const webStyle: { [key: string]: React.CSSProperties } = {
   },
   nameText: {
     fontWeight: 600,
+    maxWidth: "220px",
     whiteSpace: "nowrap",
     overflow: "hidden",
-    textOverflow: "ellipsis",
+    textOverflow: "ellipsis"
   },
   buttonBox: {
     marginTop: "10px",

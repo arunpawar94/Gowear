@@ -8,11 +8,13 @@ import {
   IconButton,
   Typography,
   Badge,
+  useMediaQuery,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PersonIcon from "@mui/icons-material/Person";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import gowearImage from "../assets/gowearImageCrope.png";
+import gowearLogoImage from "../assets/gowearLogoTransparent.png";
 import { primaryColor } from "../config/colors";
 import consfigJSON from "./config";
 import { useNavigate } from "react-router-dom";
@@ -22,6 +24,7 @@ const Header: React.FC = () => {
   const [search, setSearch] = useState("");
   const [loggedIn, setLoggedIn] = useState(true);
   const sharedState = useSelector((state: RootState) => state.shared.cartCount);
+  const size450 = useMediaQuery("(min-width:450px)");
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
@@ -34,23 +37,38 @@ const Header: React.FC = () => {
 
   return (
     <Box style={webStyle.mainBox}>
-      <img src={gowearImage} alt="gowearImage" style={webStyle.comLogoImage} />
-      <Box flexGrow={1}>
-        <TextField
-          type="text"
-          value={search}
-          onChange={handleSearchChange}
-          sx={webStyle.searchInputStyle}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon style={{ color: "#65279b" }} />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
+      <Box display={"flex"} gap={"20px"} width={"100%"}>
+        {size450 ? (
+          <img
+            src={gowearImage}
+            alt="gowearImage"
+            style={webStyle.comLogoImage}
+          />
+        ) : (
+          <img
+            src={gowearLogoImage}
+            alt="gowearImage"
+            style={{ width: "40px" }}
+          />
+        )}
+        <Box flexGrow={1} style={{ width: "100%", maxWidth: "500px" }}>
+          <TextField
+            type="text"
+            value={search}
+            fullWidth
+            onChange={handleSearchChange}
+            sx={webStyle.searchInputStyle}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon style={{ color: "#65279b" }} />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+        </Box>
       </Box>
       {loggedIn ? (
         <IconButton aria-label="cart" title="Go to Cart">
@@ -104,7 +122,6 @@ const webStyle = {
     "& .MuiOutlinedInput-root": {
       height: "40px",
       borderRadius: "25px",
-      width: "500px",
       "& fieldset": {
         border: `1px solid #65279b`,
       },
