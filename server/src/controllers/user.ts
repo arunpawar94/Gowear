@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import User from '../models/userModel';
 
-// Fetch all users
 export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
   try {
     const users = await User.find();
@@ -11,7 +10,6 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
-// Create a new user
 export const createUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, email, password, dob, role } = req.body;
