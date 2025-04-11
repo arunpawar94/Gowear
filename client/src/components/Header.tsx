@@ -98,7 +98,7 @@ const webStyle = {
     justifyContent: "space-between",
     boxShadow: "0px 0px 10px 0px #965cf6",
     padding: "15px",
-    gap: "25px",
+    gap: "25px"
   },
   badgeCountStyle: {
     "& .MuiBadge-badge": {

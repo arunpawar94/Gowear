@@ -14,7 +14,6 @@ import image1 from "../../assets/Screenshot 2025-01-23 at 16-56-17 elegant-women
 import image2 from "../../assets/istockphoto-639275740-612x612.jpg";
 import image3 from "../../assets/maxresdefault.jpg";
 import image4 from "../../assets/photo-1483985988355-763728e1935b.jpeg";
-import gowearLogo from "../../assets/gowearLogoTransparent.png";
 
 import mensCategorie from "../../assets/mensCategorie.png";
 import womensCategorie from "../../assets/womensCategorie.png";
@@ -27,8 +26,8 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-import { primaryColor } from "../../config/colors";
-import { bannerImage } from "../../config/assets";
+import { primaryColor, lightTextColor } from "../../config/colors";
+import { bannerImage, gowearLogo } from "../../config/assets";
 import CartBox from "../../components/CartBox";
 import consfigJSON from "./config";
 
@@ -117,7 +116,7 @@ const Home: React.FC = () => {
   };
 
   return (
-    <Box>
+    <Box mb={3}>
       {renderCarousel()}
       {renderCartBox()}
       {renderBanner()}
@@ -131,7 +130,7 @@ const Home: React.FC = () => {
             padding: size1030 ? "0" : "0 50px",
           }}
         >
-          <Box style={webStyle.categorieImageBox}>
+          <Box sx={webStyle.categorieImageBox}>
             <img
               src={mensCategorie}
               alt="mens_categories"
@@ -150,7 +149,7 @@ const Home: React.FC = () => {
               />
             </Box>
           )}
-          <Box style={webStyle.categorieImageBox}>
+          <Box sx={webStyle.categorieImageBox}>
             <img
               src={womensCategorie}
               alt="womens_categories"
@@ -190,7 +189,7 @@ const Home: React.FC = () => {
             },
           ].map((item, index) => (
             <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3 }} key={index}>
-              <Box style={webStyle.subCatorieImageBox}>
+              <Box sx={webStyle.subCatorieImageBox}>
                 <img
                   src={item.imageValue}
                   alt={item.altName}
@@ -277,6 +276,9 @@ const webStyle = {
     border: `1px solid ${primaryColor}`,
     cursor: "pointer",
     height: "400px",
+    "&:hover": {
+      boxShadow: `0px 0px 8px ${primaryColor}`,
+    },
   } as React.CSSProperties,
   subCatorieLabelBox: {
     position: "absolute",
@@ -290,7 +292,7 @@ const webStyle = {
     paddingTop: "25px",
   } as React.CSSProperties,
   subCatorieLabelText: {
-    color: "#fff",
+    color: lightTextColor,
   },
   subCatorieImage: {
     width: "100%",
@@ -311,6 +313,9 @@ const webStyle = {
     alignItems: "center",
     gap: "15px",
     cursor: "pointer",
+    "&:hover": {
+      boxShadow: `0px 0px 8px ${primaryColor}`,
+    },
   } as React.CSSProperties,
   categorieHeadingText: {
     fontSize: "24px",
@@ -320,7 +325,7 @@ const webStyle = {
     color: primaryColor,
   } as React.CSSProperties,
   categorieText: {
-    color: "#fff",
+    color: lightTextColor,
     fontSize: "20px",
   },
   categorieMainImageBox: {
@@ -332,7 +337,7 @@ const webStyle = {
   } as React.CSSProperties,
   subCategorieMainImageBox: {},
   bannerText: {
-    color: "#fff",
+    color: lightTextColor,
     fontSize: "35px",
     fontWeight: 600,
     textTransform: "uppercase",
@@ -340,7 +345,7 @@ const webStyle = {
   shadowText: {
     fontSize: "35px",
     color: "#000",
-    webkitTextStroke: `0.5px #fff`,
+    webkitTextStroke: `0.5px ${lightTextColor}`,
   },
   bannerImageWrapper: {
     position: "relative",
@@ -349,7 +354,7 @@ const webStyle = {
   } as React.CSSProperties,
   bannerImageBackBox: {
     position: "absolute",
-    background: "orange",
+    background: primaryColor,
     width: "200px",
     height: "300px",
     zIndex: 0,
