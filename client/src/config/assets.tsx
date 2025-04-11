@@ -1,0 +1,1 @@
+export const bannerImage = require("../assets/bannerImage.jfif")
