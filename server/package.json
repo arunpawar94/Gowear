@@ -6,7 +6,13 @@
   "author": "Arun Pawar",
   "license": "MIT",
   "dependencies": {
+    "cloudinary": "^2.6.0",
+    "dotenv": "^16.5.0",
     "express": "^4.21.2",
+    "express-validator": "^7.2.1",
+    "mongoose": "^8.13.2",
+    "multer": "^1.4.5-lts.2",
+    "multer-storage-cloudinary": "^4.0.0",
     "typescript": "^5.7.2"
   },
   "type": "esmodule",
@@ -14,12 +20,12 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "start:dev": "nodemon dist/index.js",
-    "start:ts": "ts-node src/index.ts",
-    "start:nodemonts": "nodemon src/index.ts"
-
+    "start:ts": "ts-node src/app.ts",
+    "start:nodemon": "nodemon src/app.ts"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
+    "@types/multer": "^1.4.12",
     "ts-node": "^10.9.2"
   }
 }
