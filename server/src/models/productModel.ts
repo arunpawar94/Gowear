@@ -58,7 +58,9 @@ const productSchema: Schema = new Schema(
                   required: [true, "Color name is required."],
                 },
                 images: {
-                  type: [String],
+                  type: [
+                    { imgUrl: { type: String }, publicId: { type: String } },
+                  ],
                   validate: {
                     validator: (val: string[]) => val.length > 0,
                     message: "At least one image is required in colors",

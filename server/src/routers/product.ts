@@ -15,9 +15,11 @@ router.post(
   productValidator,
   (req: Request, res: Response, next: NextFunction): void => {
     const errors = validationResult(req);
-    let errorsArray = errors.array().map((item) => item.msg);
+    let errorsArray = errors
+      .array()
+      .flatMap((item) => (Array.isArray(item.msg) ? item.msg : [item.msg]));
     if (!errors.isEmpty()) {
-      res.status(400).json({ errors: errorsArray });
+      res.status(400).json({message: "Error", errors: errorsArray });
       return;
     }
     next();
