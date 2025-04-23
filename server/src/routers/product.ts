@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import upload from "../config/multerConfig";
-import { addProduct } from "../controllers/product";
+import { addProduct, getProducts } from "../controllers/product";
 import {
   productValidator,
   validateImageFiles,
@@ -19,7 +19,7 @@ router.post(
       .array()
       .flatMap((item) => (Array.isArray(item.msg) ? item.msg : [item.msg]));
     if (!errors.isEmpty()) {
-      res.status(400).json({message: "Error", errors: errorsArray });
+      res.status(400).json({ message: "Error", errors: errorsArray });
       return;
     }
     next();
@@ -27,5 +27,7 @@ router.post(
   validateImageFiles,
   addProduct
 );
+
+router.get("/show_products", getProducts);
 
 export default router;
