@@ -8,14 +8,11 @@ export interface IProduct extends Document {
   price: number;
   mrp: number;
   discount: number;
-  sizes: {
+  colors: {
+    images: string[];
     name: string;
-    colors: {
-      images: string[];
-      name: string;
-      quantity: number;
-    }[];
-  };
+    sizes: { name: string; quantity: number }[];
+  }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -46,45 +43,34 @@ const productSchema: Schema = new Schema(
     price: { type: Number, required: [true, "Price is required."] },
     mrp: { type: Number, required: [true, "MRP is required."] },
     discount: { type: Number, required: [true, "Discount is required."] },
-    sizes: {
+    colors: {
       type: [
         {
-          name: { type: String, required: [true, "Size name is required."] },
-          colors: {
-            type: [
-              {
-                name: {
-                  type: String,
-                  required: [true, "Color name is required."],
-                },
-                images: {
-                  type: [
-                    { imgUrl: { type: String }, publicId: { type: String } },
-                  ],
-                  validate: {
-                    validator: (val: string[]) => val.length > 0,
-                    message: "At least one image is required in colors",
-                  },
-                },
-                quantity: {
-                  type: Number,
-                  required: [true, "Color name is required."],
-                },
-              },
-            ],
+          name: {
+            type: String,
+            required: [true, "Color name is required."],
+          },
+          images: {
+            type: [{ imgUrl: { type: String }, publicId: { type: String } }],
             validate: {
               validator: (val: any[]) => val.length > 0,
-              message: "At least one color is required in each size",
+              message: "At least one image is required in colors",
+            },
+          },
+          sizes: {
+            type: [{ name: { type: String }, quantity: { type: Number } }],
+            required: [true, "Size is required."],
+            validate: {
+              validator: (val: any[]) => val.length > 0,
+              message: "At least one size is required in colors",
             },
           },
         },
       ],
       required: true,
       validate: {
-        validator: function (v: any[]) {
-          return Array.isArray(v) && v.length > 0;
-        },
-        message: "At least one size is required.",
+        validator: (val: any[]) => val.length > 0,
+        message: "At least one color is required.",
       },
     },
   },
