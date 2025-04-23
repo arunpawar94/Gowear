@@ -15,12 +15,12 @@ export const addProduct = async (
       price,
       mrp,
       discount,
-      sizes,
-      uploadedImages
+      colors,
+      uploadedImages,
     } = req.body;
-    let sizesData = [];
-    if (sizes) {
-      sizesData = JSON.parse(sizes);
+    let colorsData = [];
+    if (colors) {
+      colorsData = JSON.parse(colors);
     }
 
     const newProduct = new Product({
@@ -31,13 +31,11 @@ export const addProduct = async (
       price,
       mrp,
       discount,
-      sizes: sizesData,
-      uploadedImages
+      colors: colorsData,
+      uploadedImages,
     });
     await newProduct.save();
-    res
-      .status(201)
-      .json({ message: "Success", data: newProduct });
+    res.status(201).json({ message: "Success", data: newProduct });
   } catch (errors: any) {
     for (const img of req.body.uploadedImages) {
       try {
@@ -55,13 +53,9 @@ export const addProduct = async (
         UpdateError[key] = errors.errors[key].message;
       }
       let errorArray = Object.values(UpdateError);
-      res
-        .status(400)
-        .json({ message: "Error", errors: errorArray });
+      res.status(400).json({ message: "Error", errors: errorArray });
     } else {
-      res
-        .status(400)
-        .json({ message: "Error", errors });
+      res.status(400).json({ message: "Error", errors });
     }
   }
 };

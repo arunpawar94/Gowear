@@ -3,16 +3,15 @@ import { Request, Response, NextFunction } from "express";
 import { v2 as cloudinary } from "cloudinary";
 import { Readable } from "stream";
 
-interface Color {
+interface SizeItem {
   name: string;
-  coverImage: string;
-  images: string[];
   quantity: number;
 }
 
-interface Size {
+interface Color {
   name: string;
-  colors: Color[];
+  images: string[];
+  sizes: SizeItem[];
 }
 
 export const productValidator = [
@@ -25,54 +24,49 @@ export const productValidator = [
   body("mrp").notEmpty().withMessage("MRP is required"),
   body("discount").notEmpty().withMessage("Discount is required"),
 
-  body("sizes").custom((value: string) => {
-    let sizes: Size[];
+  body("colors").custom((value: string) => {
+    let colors: Color[];
     const errors: string[] = [];
     try {
-      sizes = JSON.parse(value);
+      colors = JSON.parse(value);
     } catch {
-      throw new Error("Invalid JSON in sizes");
+      throw new Error("Invalid JSON in colors");
     }
-
-    if (!Array.isArray(sizes) || sizes.length === 0) {
-      errors.push("At least one size is required.");
+    if (!Array.isArray(colors) || colors.length === 0) {
+      errors.push(`At least one color is required.`);
     } else {
-      sizes.forEach((size) => {
-        if (!size.name) {
-          errors.push(`Size name is required.`);
+      colors.forEach((colorItem, colorIndex) => {
+        if (!colorItem.name) {
+          errors.push(`Color name is required for S.no. ${colorIndex + 1}`);
         }
 
-        if (!Array.isArray(size.colors) || size.colors.length === 0) {
+        if (!Array.isArray(colorItem.images) || colorItem.images.length === 0) {
           errors.push(
-            `At least one color is required for size: '${size.name}'`
+            `At least one image is required for color S.no: '${colorIndex + 1}'`
+          );
+        }
+
+        if (!Array.isArray(colorItem.sizes) || colorItem.sizes.length === 0) {
+          errors.push(
+            `At least one size is required for color S.no: '${colorIndex + 1}'`
           );
         } else {
-          size.colors.forEach((color) => {
-            if (!color.name) {
-              errors.push(`Color name is required for size: '${size.name}'`);
-            }
-
-            if (!Array.isArray(color.images) || color.images.length === 0) {
-              errors.push(
-                `At least one image is required for color: '${color.name}' for size: '${size.name}'`
-              );
-            }
-
-            if (color.quantity === 0 || color.quantity) {
-              if (color.quantity <= 0) {
+          colorItem.sizes.forEach((sizeItem) => {
+            if (sizeItem.quantity === 0 || sizeItem.quantity) {
+              if (sizeItem.quantity <= 0) {
                 errors.push(
-                  `Quantity must be greater than zero for color: '${color.name}' for size: '${size.name}'`
+                  `Quantity must be greater than zero for color: '${colorItem.name}' for size: '${colorItem.name}'`
                 );
               }
 
-              if (typeof color.quantity !== "number") {
+              if (typeof sizeItem.quantity !== "number") {
                 errors.push(
-                  `Quantity must be a number for color: '${color.name}' for size: '${size.name}'`
+                  `Quantity must be a number for color: '${colorItem.name}' for size: '${sizeItem.name}'`
                 );
               }
             } else {
               errors.push(
-                `Quantity is required for color: '${color.name}' for size: '${size.name}'`
+                `Quantity is required for color: '${colorItem.name}' for size: '${sizeItem.name}'`
               );
             }
           });
@@ -110,11 +104,11 @@ export const validateImageFiles = async (
   res: Response,
   next: NextFunction
 ) => {
-  const sizesRaw = req.body.sizes;
-  let sizes;
+  const colorsRaw = req.body.colors;
+  let colors;
 
   try {
-    sizes = JSON.parse(sizesRaw);
+    colors = JSON.parse(colorsRaw);
   } catch {
     res.status(400).json({ message: "Error", error: "Invalid JSON for sizes" });
     return;
@@ -131,29 +125,33 @@ export const validateImageFiles = async (
       files.map((file: Express.Multer.File) => uploadToCloudinary(file))
     );
     req.body.uploadedImages = uploadedImages;
-    for (let s = 0; s < sizes.length; s++) {
-      for (let c = 0; c < sizes[s].colors.length; c++) {
-        const colorPath = `sizes[${s}][colors][${c}]`;
+    for (let c = 0; c < colors.length; c++) {
+      const colorPath = `colors[${c}]`;
 
-        const imageFiles = uploadedImages.filter((f, index) =>
-          f.fieldname.startsWith(`${colorPath}[images][${index}]`)
+      const imageFiles = uploadedImages.filter((uploadImageItem) => {
+        const fieldMatch = colors[c].images.some(
+          (_imageItem: string, imageIndex: number) =>
+            uploadImageItem.fieldname === `${colorPath}[images][${imageIndex}]`
         );
+        return fieldMatch;
+      });
 
-        if (imageFiles.length === 0) {
-          res
-            .status(400)
-            .json({ message: "Error", error: `Missing images for ${colorPath}` });
-          return;
-        }
-        sizes[s].colors[c].images = imageFiles.map((img) => ({
-          imgUrl: img.secure_url,
-          publicId: img.public_id,
-        }));
+      if (imageFiles.length === 0) {
+        res.status(400).json({
+          message: "Error",
+          error: `Missing images for ${colorPath}`,
+          uploaded: req.body.uploadedImages,
+        });
+        return;
       }
+      colors[c].images = imageFiles.map((img) => ({
+        imgUrl: img.secure_url,
+        publicId: img.public_id,
+      }));
     }
   } catch (error) {
-    res.status(500).json({message: "Error", errors: "Image upload failed" });
+    res.status(500).json({ message: "Error", errors: "Image upload failed" });
   }
-  req.body.sizes = JSON.stringify(sizes);
+  req.body.colors = JSON.stringify(colors);
   next();
 };
