@@ -133,6 +133,7 @@ const AddProductFunction: React.FC = () => {
       );
       return {
         ...colorsItem,
+        name: colorsItem.name.trim(),
         images: imagesArray,
         sizes: sizeArray,
       };
@@ -292,7 +293,7 @@ const AddProductFunction: React.FC = () => {
     name: string,
     colorIndex: number
   ) => {
-    const value = event.target.value.trim();
+    const value = event.target.value;
     const files = (event.target as HTMLInputElement).files;
     let fileList: File[] = [];
     if (files) {
