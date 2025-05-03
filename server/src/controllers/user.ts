@@ -12,11 +12,11 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
 
 export const createUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password, dob, role } = req.body;
-    const newUser = new User({ name, email, password, dob, role });
+    const { name, email, password, role } = req.body;
+    const newUser = new User({ name, email, password, role });
     await newUser.save();
-    res.status(201).json({ message: 'User created successfully', user: newUser });
+    res.status(201).json({ message: 'success', data: newUser });
   } catch (error) {
-    res.status(500).json({ message: 'Error creating user', error });
+    res.status(500).json({ message: 'error', error });
   }
 };
