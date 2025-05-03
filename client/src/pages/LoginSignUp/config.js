@@ -1,0 +1,10 @@
+exports.signIn = "Sign In";
+exports.signUp = "Sign Up";
+exports.createAccount = "Create Account";
+exports.orUseEmailPassword = "or use email password";
+exports.orUseEmailRegistration = "or use email for registration";
+exports.helloFriend = "Hello Friend!";
+exports.welcomeBack = "Welcome Back!";
+exports.signUpSubText = "Register with your personal details to use all of site features";
+exports.signInSubText = "Enter your personal details to use all of site features";
+exports.keepMeLogIn = "Keep me logged in.";

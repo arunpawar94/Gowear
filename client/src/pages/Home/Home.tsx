@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -30,15 +30,65 @@ import { primaryColor, lightTextColor } from "../../config/colors";
 import { bannerImage, gowearLogo } from "../../config/assets";
 import CartBox from "../../components/CartBox";
 import consfigJSON from "./config";
+import axios from "axios";
+
+const base_url = process.env.REACT_APP_API_URL;
+
+interface ColorsInterface {
+  name: string;
+  images: { imgUrl: string }[];
+  sizes: { name: string; quantity: number }[];
+}
+
+type GetProductsResp = {
+  name: string;
+  description: string;
+  categorie: "men" | "women";
+  subCategorie: "topwear" | "bottomwear";
+  price: number;
+  mrp: number;
+  discount: number;
+  colors: ColorsInterface[];
+};
 
 const Home: React.FC = () => {
   const sharedState = useSelector((state: RootState) => state.shared.cartCount);
   const dispatch = useDispatch<AppDispatch>();
   const size1030 = useMediaQuery("(max-width:1030px)");
   const size930 = useMediaQuery("(max-width:930px)");
+  const [products, setProducts] = useState<GetProductsResp[]>([]);
 
   const updateState = () => {
     dispatch(setSharedState(1));
+  };
+
+  useEffect(() => {
+    getProducts();
+  }, []);
+
+  const getProducts = () => {
+    axios
+      .get(`${base_url}/products/show_products`, {
+        params: {
+          per_page: 20,
+        },
+      })
+      .then((response) => {
+        const shuffledData = shuffleArray(response.data.data);
+        setProducts(shuffledData);
+      })
+      .catch((error) => {
+        console.error("Error fetching products:", error);
+      });
+  };
+
+  const shuffleArray = (array: GetProductsResp[]) => {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
   };
 
   const renderCarousel = () => {
@@ -66,17 +116,36 @@ const Home: React.FC = () => {
     );
   };
 
+  const handleCartProductDetail = (product: GetProductsResp) => {
+    let imageUrl = "";
+    product.colors.forEach((item) => {
+      const checkAvailability = item.sizes.some(
+        (sizeItem) => sizeItem.quantity > 0
+      );
+      if (checkAvailability) {
+        imageUrl = item.images[0].imgUrl;
+      }
+    });
+    const dataObject = {
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      mrp: product.mrp,
+      discount: product.discount,
+      imageUrl,
+    };
+    return dataObject;
+  };
+
   const renderCartBox = () => {
     return (
       <GridBox>
         <Grid container spacing={3}>
-          {Array(10)
-            .fill(null)
-            .map((_item, index) => (
-              <Grid size={{ xs: 12, sm: 4, md: 3, lg: 2.4 }} key={index}>
-                <CartBox />
-              </Grid>
-            ))}
+          {products.map((item, index) => (
+            <Grid size={{ xs: 12, sm: 4, md: 3, lg: 2.4 }} key={index}>
+              <CartBox product={handleCartProductDetail(item)} />
+            </Grid>
+          ))}
         </Grid>
         <AddButton>View More</AddButton>
       </GridBox>

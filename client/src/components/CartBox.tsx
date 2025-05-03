@@ -3,9 +3,16 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import { primaryColor } from "../config/colors";
 
-import product from "../assets/61xoajnZ55L._SY879_.jpg";
+type CartBoxProps = {
+  name: string;
+  description: string;
+  price: number;
+  mrp: number;
+  discount: number;
+  imageUrl: string;
+};
 
-export default function CartBox() {
+export default function CartBox({ product }: { product: CartBoxProps }) {
   return (
     <MainBox>
       <Box style={webStyle.imgWrapper}>
@@ -16,24 +23,24 @@ export default function CartBox() {
             <FavoriteBorderIcon style={{ color: "red" }} />
           )}
         </IconButton>
-        <img src={product} alt="product_image" style={webStyle.imgStyle} />
+        <img src={product.imageUrl} alt="product_image" style={webStyle.imgStyle} />
       </Box>
       <Box style={webStyle.detailBox}>
         <Typography style={webStyle.nameText}>
-          Symbol Premium Symbol PremiumSymbol PremiumSymbol Premium
+          {product.name}
         </Typography>
         <EllipsisTypography style={webStyle.desText}>
-          Men's Cotton Non-Iron Formal Shirt (Regular Fit | Solid)
+          {product.description}
         </EllipsisTypography>
-        <Typography>Price ₹1,899</Typography>
+        <Typography>Price ₹{product.price}</Typography>
         <Typography style={webStyle.mrpText}>
           M.R.P:{" "}
           <span
             style={{ ...webStyle.desText, textDecorationLine: "line-through" }}
           >
-            ₹3,999
+            ₹{product.mrp}
           </span>{" "}
-          <span style={{ ...webStyle.desText, color: "red" }}>(53% off)</span>
+          <span style={{ ...webStyle.desText, color: "red" }}>({product.discount}% off)</span>
         </Typography>
         <Typography style={{ color: "green" }}>Available</Typography>
         <Box style={webStyle.buttonBox}>
@@ -108,8 +115,8 @@ const webStyle: { [key: string]: React.CSSProperties } = {
   },
   imgStyle: {
     width: "100%",
-    maxWidth: "130px",
     height: "100%",
+    maxHeight: "190px",
     objectFit: "contain",
   } as React.CSSProperties,
 };
