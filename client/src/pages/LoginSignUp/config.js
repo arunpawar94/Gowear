@@ -8,3 +8,5 @@ exports.welcomeBack = "Welcome Back!";
 exports.signUpSubText = "Register with your personal details to use all of site features";
 exports.signInSubText = "Enter your personal details to use all of site features";
 exports.keepMeLogIn = "Keep me logged in.";
+exports.forgotPassword = "Forgot Password";
+exports.resend = "Resend";
