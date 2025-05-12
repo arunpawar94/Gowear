@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from "express";
 import connectDB from "./config/db";
 import userRoutes from "./routers/user";
 import productRoutes from "./routers/product";
+import otpVerify from "./routers/otpVerify";
 import cors from "cors";
 
 const app = express();
@@ -14,7 +15,8 @@ app.use(cors());
 
 app.use("/users", userRoutes);
 app.use("/products", productRoutes);
-app.use((req: Request, res: Response) => {
+app.use("/otp_verify", otpVerify);
+app.use((_req: Request, res: Response) => {
   res.status(404).json({ message: "Route not found" });
 });
 

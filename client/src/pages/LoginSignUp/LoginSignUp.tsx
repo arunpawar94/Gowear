@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Box,
   TextField,
@@ -12,12 +12,20 @@ import {
   Snackbar,
   Alert,
   useMediaQuery,
+  InputBase,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 import configJSON from "./config";
 import { primaryColor, errorColor, lightTextColor } from "../../config/colors";
 import GoogleIcon from "@mui/icons-material/Google";
 import FacebookOutlinedIcon from "@mui/icons-material/FacebookOutlined";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { linkedInIcon, gitHubIcon } from "../../config/assets";
+import axios from "axios";
+
+const base_url = process.env.REACT_APP_API_URL;
 
 const signInTexts = {
   activeHeading: configJSON.signIn,
@@ -57,6 +65,13 @@ type InputErrors = {
 
 type SnackbarType = string | null;
 
+type ResetVerifyActionType =
+  | "resetPassword"
+  | "resetVerify"
+  | "signUpVerify"
+  | "resetPasswordEnter"
+  | null;
+
 export default function LoginSignUp() {
   const [action, setAction] = useState<ActionType>("signIn");
   const [acceptPolicy, setAcceptPolicy] = useState<boolean>(false);
@@ -71,13 +86,23 @@ export default function LoginSignUp() {
   const [errorSnackbarMsg, setErrorSnackbarMsg] = useState<SnackbarType>(null);
   const [successSnackbarMsg, setSuccessSnackbarMsg] =
     useState<SnackbarType>(null);
+  const [resetVerifyAction, setResetVerifyAction] =
+    useState<ResetVerifyActionType>(null);
+  const [otp, setOtp] = useState(["", "", "", ""]);
+  const [otpError, setOtpError] = useState("Please enter OTP!");
+  const [showMainPassword, setShowMainPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState<boolean>(false);
+
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const textShow = action === "signIn" ? signInTexts : signUpTexts;
   const match600 = useMediaQuery("(max-width:600px)");
 
   useEffect(() => {
     handleErrors();
-  }, [fullName, emailId, password, confirmPassword, checkSubmit]);
+    handleOtpErrorMsg();
+  }, [fullName, emailId, password, confirmPassword, checkSubmit, otp]);
 
   const handleAcceptPolicyChange = () => {
     setAcceptPolicy(!acceptPolicy);
@@ -117,6 +142,8 @@ export default function LoginSignUp() {
     setConfirmPassword("");
     setAcceptPolicy(false);
     setCheckSubmit(false);
+    setShowMainPassword(false);
+    setShowConfirmPassword(false);
     setUserType("user");
   };
 
@@ -126,8 +153,32 @@ export default function LoginSignUp() {
       const isError = Object.values(inputErrors).some((item) => item);
       if (!isError) {
         if (acceptPolicy) {
-          setSuccessSnackbarMsg("You are registered successfully!");
-          handleActionChange();
+          setCheckSubmit(false);
+          const data = {
+            name: fullName,
+            email: emailId,
+            password: password,
+            role: userType,
+            methodToSignUpLogin: "email",
+            termsAndPolicies: acceptPolicy,
+          };
+          axios
+            .post(`${base_url}/users/register`, data, {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            })
+            .then((_response) => {
+              setSuccessSnackbarMsg("You are registered successfully!");
+              sendOtpApi("verifyEmail");
+            })
+            .catch((error) => {
+              if (Array.isArray(error.response.data.errors)) {
+                setErrorSnackbarMsg(error.response.data.errors[0]);
+              } else {
+                setErrorSnackbarMsg(error.response.data.errors);
+              }
+            });
         } else {
           setErrorSnackbarMsg("Please accept terms and conditions!");
         }
@@ -143,6 +194,47 @@ export default function LoginSignUp() {
         handleReset();
       }
     }
+  };
+
+  const sendOtpApi = (OtpFor: "verifyEmail" | "resendVerifyEmail") => {
+    const bodyData = { email: emailId };
+    axios
+      .post(`${base_url}/otp_verify/request`, bodyData, {
+        headers: {
+          "content-Type": "application/json",
+        },
+      })
+      .then((_response) => {
+        if (OtpFor === "verifyEmail") {
+          setResetVerifyAction("signUpVerify");
+        }
+        if (OtpFor === "resendVerifyEmail") {
+          setSuccessSnackbarMsg("OTP send successfully!");
+        }
+      })
+      .catch((error) => {
+        setErrorSnackbarMsg(error.response.data.error);
+      });
+  };
+
+  const verifyOtpApi = (OtpFor: "verifyEmail") => {
+    const bodyData = {
+      email: emailId,
+      otp: otp.join(""),
+    };
+    axios
+      .post(`${base_url}/otp_verify/verify`, bodyData, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+      .then((response) => {
+        setSuccessSnackbarMsg("Email verified successfully!");
+        handleResetLoginClick();
+      })
+      .catch((error) => {
+        setErrorSnackbarMsg(error.response.data.error);
+      });
   };
 
   const handleErrors = () => {
@@ -165,7 +257,7 @@ export default function LoginSignUp() {
     if (!emailId.trim()) {
       emailError = "Email is required*.";
     }
-    if (action === "signUp") {
+    if (action === "signUp" || resetVerifyAction === "resetPasswordEnter") {
       passwordError = handlePasswordErrorMsg();
     } else {
       if (!password.trim()) {
@@ -212,17 +304,140 @@ export default function LoginSignUp() {
     return error;
   };
 
+  const handleOtpErrorMsg = () => {
+    const isEmpty = otp.every((item) => !item);
+    const isValid = otp.every((item) => item);
+    if (isValid) {
+      setOtpError("");
+    } else {
+      if (isEmpty) {
+        setOtpError("Please enter OTP!");
+      } else {
+        setOtpError("Please enter valid OTP!");
+      }
+    }
+  };
+
   const handleSnackbarClose = () => {
     setErrorSnackbarMsg(null);
     setSuccessSnackbarMsg(null);
+  };
+
+  const handleChange = (index: number, value: string) => {
+    if (!/^[0-9]?$/.test(value)) return; // Only allow a single digit (0-9)
+
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    // Auto-focus to next input if current is filled
+    if (value && index < 3) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      // Move focus to previous input on backspace if current is empty
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const paste = e.clipboardData.getData("text").trim();
+    if (!/^\d{4}$/.test(paste)) return;
+    const newOtp = paste.split("");
+    setOtp(newOtp);
+    newOtp.forEach((val, i) => {
+      if (inputRefs.current[i]) {
+        inputRefs.current[i]!.value = val;
+      }
+    });
+    inputRefs.current[3]?.focus();
+    e.preventDefault();
+  };
+
+  const handleResetVerifyData = () => {
+    let heading = "Verify Email!",
+      buttonLabel = "Verify";
+    if (resetVerifyAction === "resetPassword") {
+      heading = "Reset Password!";
+      buttonLabel = "Send OTP";
+    }
+    if (resetVerifyAction === "resetPasswordEnter") {
+      heading = "Enter New Password!";
+      buttonLabel = "Change";
+    }
+    return {
+      heading,
+      buttonLabel,
+    };
+  };
+
+  const handleForgotPasswordClick = () => {
+    handleReset();
+    setResetVerifyAction("resetPassword");
+  };
+
+  const handleResetLoginClick = () => {
+    handleReset();
+    setResetVerifyAction(null);
+    setAction("signIn");
+    setCheckSubmit(false);
+    setOtpError("Please enter OTP!");
+    setOtp(["", "", "", ""]);
+  };
+
+  const handleResetSendOtpClick = () => {
+    setCheckSubmit(true);
+    if (resetVerifyAction === "resetPassword") {
+      if (!inputErrors.emailErr) {
+        setSuccessSnackbarMsg("OTP send succefully on the mail!");
+        setResetVerifyAction("resetVerify");
+        setCheckSubmit(false);
+      }
+    }
+    if (resetVerifyAction === "resetVerify") {
+      if (!otpError) {
+        setSuccessSnackbarMsg("OTP verified successfully!");
+        setResetVerifyAction("resetPasswordEnter");
+        setCheckSubmit(false);
+        setOtpError("Please enter OTP!");
+      }
+    }
+    if (resetVerifyAction === "signUpVerify") {
+      if (!otpError) {
+        verifyOtpApi("verifyEmail");
+      }
+    }
+    if (resetVerifyAction === "resetPasswordEnter") {
+      if (!inputErrors.passwordErr && !inputErrors.confirmPasswordErr) {
+        setSuccessSnackbarMsg("Password changed successfully!");
+        handleResetLoginClick();
+      }
+    }
+  };
+
+  const handleResendOtpClick = () => {
+    sendOtpApi("resendVerifyEmail");
+  };
+
+  const handleShowPassword = (name: string) => {
+    if (name === "password") {
+      setShowMainPassword(!showMainPassword);
+    } else {
+      setShowConfirmPassword(!showConfirmPassword);
+    }
   };
 
   const renderInputs = (
     name: string,
     placeholder: string,
     value: string,
-    error: string
+    error: string,
+    showPassword?: boolean
   ) => {
+    const isPassword = name === "password" || name === "confirmPassword";
     return (
       <Box style={{ width: "100%" }}>
         <TextField
@@ -230,12 +445,29 @@ export default function LoginSignUp() {
           value={value}
           placeholder={placeholder}
           fullWidth
-          type="text"
+          type={isPassword && !showPassword ? "password" : "text"}
           sx={
             checkSubmit && error
               ? webStyle.inputErrorStyle
               : webStyle.inputStyle
           }
+          slotProps={{
+            input: {
+              autoComplete: "off",
+              endAdornment: isPassword ? (
+                <InputAdornment position="end">
+                  <IconButton
+                    edge="end"
+                    onClick={() => handleShowPassword(name)}
+                  >
+                    {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                  </IconButton>
+                </InputAdornment>
+              ) : (
+                <></>
+              ),
+            },
+          }}
           onChange={(event) => handleInputChange(event, name)}
         />
         {checkSubmit && error && (
@@ -247,36 +479,31 @@ export default function LoginSignUp() {
     );
   };
 
-  return (
-    <Box style={webStyle.mainBox}>
-      <Box style={{ ...webStyle.inMainBox, width: match600 ? "100%" : "auto" }}>
+  const signInSignUpGrid = () => {
+    return (
+      <Grid
+        container
+        sx={{
+          ...webStyle.mainGridContainer,
+          transform: action === "signUp" ? "scaleX(-1)" : "scaleX(1)",
+          width: match600 ? "100%" : "auto",
+        }}
+        spacing={1}
+      >
         <Grid
-          container
           sx={{
-            ...webStyle.mainGridContainer,
+            ...webStyle.leftGrid,
             transform: action === "signUp" ? "scaleX(-1)" : "scaleX(1)",
-            width: match600 ? "100%" : "auto",
           }}
-          spacing={1}
+          size={{ xs: 12, sm: 6, lg: 6 }}
         >
-          <Grid
-            sx={{
-              ...webStyle.leftGrid,
-              transform: action === "signUp" ? "scaleX(-1)" : "scaleX(1)",
-            }}
-            size={{ xs: 12, sm: 6, lg: 6 }}
-          >
-            <Box sx={webStyle.inMainLeftBox}>
-              <Typography style={webStyle.signInHeadingText}>
-                {textShow.activeHeading}
-              </Typography>
-              <Box style={webStyle.iconWrapperBox}>
-                {[
-                  GoogleIcon,
-                  FacebookOutlinedIcon,
-                  gitHubIcon,
-                  linkedInIcon,
-                ].map((Item, index) => (
+          <Box sx={webStyle.inMainLeftBox}>
+            <Typography style={webStyle.signInHeadingText}>
+              {textShow.activeHeading}
+            </Typography>
+            <Box style={webStyle.iconWrapperBox}>
+              {[GoogleIcon, FacebookOutlinedIcon, gitHubIcon, linkedInIcon].map(
+                (Item, index) => (
                   <Box key={index} style={webStyle.iconBox}>
                     {index === 0 || index === 1 ? (
                       <Item style={{ color: primaryColor }} />
@@ -288,99 +515,103 @@ export default function LoginSignUp() {
                       />
                     )}
                   </Box>
-                ))}
-              </Box>
-              <Typography style={webStyle.emailPassSubText}>
-                {textShow.activeSubText}
-              </Typography>
-              <Box style={webStyle.inputWrapperBox}>
-                {action === "signUp" && (
-                  <RadioGroup
-                    aria-labelledby="demo-radio-buttons-group-label"
-                    name="radio-buttons-group"
-                    value={userType}
-                    row
-                    onChange={(event) => handleInputChange(event, "user_type")}
-                    style={{ marginBottom: "-15px", marginTop: "-10px" }}
-                  >
-                    <FormControlLabel
-                      value="user"
-                      control={<Radio sx={webStyle.radioButtonStyle} />}
-                      label="User"
-                      sx={webStyle.radioControllerStyle}
-                    />
-                    <FormControlLabel
-                      value="product_manager"
-                      control={<Radio sx={webStyle.radioButtonStyle} />}
-                      label="Product Manager"
-                      sx={webStyle.radioControllerStyle}
-                    />
-                    <FormControlLabel
-                      value="admin"
-                      control={<Radio sx={webStyle.radioButtonStyle} />}
-                      label="Admin"
-                      sx={webStyle.radioControllerStyle}
-                    />
-                  </RadioGroup>
-                )}
-                {action === "signIn" ? (
-                  <>
-                    {renderInputs(
-                      "email",
-                      "Email*",
-                      emailId,
-                      inputErrors.emailErr
-                    )}
-                    {renderInputs(
-                      "password",
-                      "Password*",
-                      password,
-                      inputErrors.passwordErr
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {renderInputs(
-                      "fullName",
-                      "Full Name*",
-                      fullName,
-                      inputErrors.fullNameErr
-                    )}
-                    {renderInputs(
-                      "email",
-                      "Email*",
-                      emailId,
-                      inputErrors.emailErr
-                    )}
-                    {renderInputs(
-                      "password",
-                      "Password*",
-                      password,
-                      inputErrors.passwordErr
-                    )}
-                    {renderInputs(
-                      "confirmPassword",
-                      "Confirm Password*",
-                      confirmPassword,
-                      inputErrors.confirmPasswordErr
-                    )}
-                  </>
-                )}
-                {action === "signUp" ? (
-                  <Box style={webStyle.policyTermBox}>
-                    <Checkbox
-                      sx={webStyle.checkboxCheckedColor}
-                      checked={acceptPolicy}
-                      onClick={handleAcceptPolicyChange}
-                    />
-                    <Typography style={{ fontSize: "12px" }}>
-                      I hereby consent to the{" "}
-                      <span style={webStyle.privacyText}>privacy policy</span>{" "}
-                      and <span style={webStyle.privacyText}>terms of use</span>
-                      .
-                    </Typography>
-                  </Box>
-                ) : (
+                )
+              )}
+            </Box>
+            <Typography style={webStyle.emailPassSubText}>
+              {textShow.activeSubText}
+            </Typography>
+            <Box style={webStyle.inputWrapperBox}>
+              {action === "signUp" && (
+                <RadioGroup
+                  aria-labelledby="demo-radio-buttons-group-label"
+                  name="radio-buttons-group"
+                  value={userType}
+                  row
+                  onChange={(event) => handleInputChange(event, "user_type")}
+                  style={{ marginBottom: "-15px", marginTop: "-10px" }}
+                >
+                  <FormControlLabel
+                    value="user"
+                    control={<Radio sx={webStyle.radioButtonStyle} />}
+                    label="User"
+                    sx={webStyle.radioControllerStyle}
+                  />
+                  <FormControlLabel
+                    value="product_manager"
+                    control={<Radio sx={webStyle.radioButtonStyle} />}
+                    label="Product Manager"
+                    sx={webStyle.radioControllerStyle}
+                  />
+                  <FormControlLabel
+                    value="admin"
+                    control={<Radio sx={webStyle.radioButtonStyle} />}
+                    label="Admin"
+                    sx={webStyle.radioControllerStyle}
+                  />
+                </RadioGroup>
+              )}
+              {action === "signIn" ? (
+                <>
+                  {renderInputs(
+                    "email",
+                    "Email*",
+                    emailId,
+                    inputErrors.emailErr
+                  )}
+                  {renderInputs(
+                    "password",
+                    "Password*",
+                    password,
+                    inputErrors.passwordErr,
+                    showMainPassword
+                  )}
+                </>
+              ) : (
+                <>
+                  {renderInputs(
+                    "fullName",
+                    "Full Name*",
+                    fullName,
+                    inputErrors.fullNameErr
+                  )}
+                  {renderInputs(
+                    "email",
+                    "Email*",
+                    emailId,
+                    inputErrors.emailErr
+                  )}
+                  {renderInputs(
+                    "password",
+                    "Password*",
+                    password,
+                    inputErrors.passwordErr,
+                    showMainPassword
+                  )}
+                  {renderInputs(
+                    "confirmPassword",
+                    "Confirm Password*",
+                    confirmPassword,
+                    inputErrors.confirmPasswordErr,
+                    showConfirmPassword
+                  )}
+                </>
+              )}
+              {action === "signUp" ? (
+                <Box style={webStyle.policyTermBox}>
+                  <Checkbox
+                    sx={webStyle.checkboxCheckedColor}
+                    checked={acceptPolicy}
+                    onClick={handleAcceptPolicyChange}
+                  />
+                  <Typography style={{ fontSize: "12px" }}>
+                    I hereby consent to the{" "}
+                    <span style={webStyle.privacyText}>privacy policy</span> and{" "}
+                    <span style={webStyle.privacyText}>terms of use</span>.
+                  </Typography>
+                </Box>
+              ) : (
+                <>
                   <Box style={webStyle.policyTermBox}>
                     <Checkbox
                       sx={webStyle.checkboxCheckedColor}
@@ -388,72 +619,190 @@ export default function LoginSignUp() {
                     />
                     <Typography>{configJSON.keepMeLogIn}</Typography>
                   </Box>
-                )}
-                <Button sx={webStyle.signInButton} onClick={handleSubmit}>
-                  {textShow.activeButton}
-                </Button>
-                {match600 && (
-                  <>
-                    {action === "signUp" ? (
-                      <Typography fontSize={14}>
-                        Already have have an account?{" "}
-                        <span
-                          style={webStyle.privacyText}
-                          onClick={() => handleActionChange()}
-                        >
-                          Sign In!
-                        </span>
-                      </Typography>
-                    ) : (
-                      <Typography fontSize={14}>
-                        Don't have an account?{" "}
-                        <span
-                          style={webStyle.privacyText}
-                          onClick={() => handleActionChange()}
-                        >
-                          Sign Up!
-                        </span>
-                      </Typography>
-                    )}
-                  </>
-                )}
-              </Box>
+                  <Typography
+                    style={webStyle.forgotPassword}
+                    onClick={handleForgotPasswordClick}
+                  >
+                    {configJSON.forgotPassword}.
+                  </Typography>
+                </>
+              )}
+              <Button sx={webStyle.signInButton} onClick={handleSubmit}>
+                {textShow.activeButton}
+              </Button>
+              {match600 && (
+                <>
+                  {action === "signUp" ? (
+                    <Typography fontSize={14}>
+                      Already have have an account?{" "}
+                      <span
+                        style={webStyle.privacyText}
+                        onClick={() => handleActionChange()}
+                      >
+                        Sign In!
+                      </span>
+                    </Typography>
+                  ) : (
+                    <Typography fontSize={14}>
+                      Don't have an account?{" "}
+                      <span
+                        style={webStyle.privacyText}
+                        onClick={() => handleActionChange()}
+                      >
+                        Sign Up!
+                      </span>
+                    </Typography>
+                  )}
+                </>
+              )}
+            </Box>
+          </Box>
+        </Grid>
+        {!match600 && (
+          <Grid
+            sx={{
+              ...webStyle.rightGrid,
+              transform: action === "signUp" ? "scaleX(-1)" : "scaleX(1)",
+            }}
+            size={{ xs: 12, sm: 6, lg: 6 }}
+          >
+            <Box
+              style={{
+                ...webStyle.inMainRightBox,
+                borderRadius:
+                  action === "signIn"
+                    ? "100px 20px 20px 100px"
+                    : "20px 100px 100px 20px",
+              }}
+            >
+              <Typography style={webStyle.helloFriendText}>
+                {textShow.inActHeading}
+              </Typography>
+              <Typography style={webStyle.signUpSubText}>
+                {textShow.inActSubText}
+              </Typography>
+              <Button
+                sx={webStyle.signUpButton}
+                onClick={() => handleActionChange()}
+              >
+                {textShow.inActButton}
+              </Button>
             </Box>
           </Grid>
-          {!match600 && (
-            <Grid
-              sx={{
-                ...webStyle.rightGrid,
-                transform: action === "signUp" ? "scaleX(-1)" : "scaleX(1)",
-              }}
-              size={{ xs: 12, sm: 6, lg: 6 }}
-            >
-              <Box
-                style={{
-                  ...webStyle.inMainRightBox,
-                  borderRadius:
-                    action === "signIn"
-                      ? "100px 20px 20px 100px"
-                      : "20px 100px 100px 20px",
-                }}
-              >
-                <Typography style={webStyle.helloFriendText}>
-                  {textShow.inActHeading}
-                </Typography>
-                <Typography style={webStyle.signUpSubText}>
-                  {textShow.inActSubText}
-                </Typography>
-                <Button
-                  sx={webStyle.signUpButton}
-                  onClick={() => handleActionChange()}
-                >
-                  {textShow.inActButton}
-                </Button>
-              </Box>
-            </Grid>
+        )}
+      </Grid>
+    );
+  };
+
+  const renderResetPassVerifyEmail = () => {
+    const resetVerifyObject = handleResetVerifyData();
+    return (
+      <Box style={{ ...webStyle.resVerMainBox }}>
+        <Typography mb={1} style={webStyle.signInHeadingText}>
+          {resetVerifyObject.heading}
+        </Typography>
+        <Box style={webStyle.resetInputs}>
+          {resetVerifyAction === "resetPassword" &&
+            renderInputs("email", "Email*", emailId, inputErrors.emailErr)}
+          {resetVerifyAction === "resetPasswordEnter" && (
+            <>
+              {renderInputs(
+                "password",
+                "Password*",
+                password,
+                inputErrors.passwordErr
+              )}
+              {renderInputs(
+                "confirmPassword",
+                "Confirm Password*",
+                confirmPassword,
+                inputErrors.confirmPasswordErr
+              )}
+            </>
           )}
-        </Grid>
+          {(resetVerifyAction === "resetVerify" ||
+            resetVerifyAction === "signUpVerify") && (
+            <Box>
+              <Box display="flex" gap={2} onPaste={handlePaste}>
+                {otp.map((digit, i) => (
+                  <InputBase
+                    key={i}
+                    inputRef={(el) => (inputRefs.current[i] = el)}
+                    value={digit}
+                    onChange={(e) => handleChange(i, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, i)}
+                    inputProps={{ maxLength: 1 }}
+                    style={{
+                      width: "50px",
+                      height: "50px",
+                      textAlign: "center",
+                      fontSize: "20px",
+                      border: `1px solid ${primaryColor}`,
+                      paddingLeft: "18px",
+                      borderRadius: "4px",
+                      backgroundColor: lightTextColor,
+                      boxShadow: "0px 0px 4px 0px #965cf6",
+                      marginTop: "10px",
+                    }}
+                  />
+                ))}
+              </Box>
+              {checkSubmit && otpError && (
+                <Typography mt={0.5} mb={-2} fontSize={14} color={errorColor}>
+                  {otpError}
+                </Typography>
+              )}
+            </Box>
+          )}
+        </Box>
+        <Box style={webStyle.resVerButtonBox}>
+          {(resetVerifyAction === "resetVerify" ||
+            resetVerifyAction === "signUpVerify") && (
+            <Button
+              style={{ ...webStyle.clearButton, marginTop: "20px" }}
+              onClick={handleResendOtpClick}
+            >
+              {configJSON.resend}
+            </Button>
+          )}
+          <Button
+            sx={{ ...webStyle.signInButton, marginTop: "20px" }}
+            onClick={handleResetSendOtpClick}
+          >
+            {resetVerifyObject.buttonLabel}
+          </Button>
+        </Box>
+        <Typography
+          style={{ marginTop: "10px" }}
+          onClick={handleResetLoginClick}
+        >
+          Back to <span style={webStyle.privacyText}>Login</span>
+        </Typography>
       </Box>
+    );
+  };
+
+  return (
+    <Box style={webStyle.mainBox}>
+      {!resetVerifyAction ? (
+        <Box
+          style={{ ...webStyle.inMainBox, width: match600 ? "100%" : "auto" }}
+        >
+          {signInSignUpGrid()}
+        </Box>
+      ) : (
+        <Box
+          style={{
+            ...webStyle.inMainBox,
+            width: "100%",
+            maxWidth: "500px",
+            height: "auto",
+          }}
+        >
+          {renderResetPassVerifyEmail()}
+        </Box>
+      )}
+
       <Snackbar
         open={Boolean(errorSnackbarMsg)}
         autoHideDuration={4000}
@@ -501,6 +850,21 @@ const webStyle = {
     margin: "50px 10px",
     height: "650px",
   },
+  forgotPassword: {
+    margin: "-20px auto 15px",
+    color: primaryColor,
+    textDecoration: "underline",
+    cursor: "pointer",
+  },
+  resVerMainBox: {
+    padding: "20px",
+    width: "100%",
+  },
+  resetInputs: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "20px",
+  } as React.CSSProperties,
   mainGridContainer: {
     transition: "transform 0.5s",
   } as React.CSSProperties,
@@ -510,6 +874,12 @@ const webStyle = {
   rightGrid: {
     transition: "transform 0.5s",
   },
+  resVerButtonBox: {
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: "10px",
+    marginTop: "10px",
+  } as React.CSSProperties,
   inMainLeftBox: {
     padding: "25px 40px",
     display: "flex",
@@ -523,6 +893,15 @@ const webStyle = {
       padding: "25px 10px",
     },
   } as React.CSSProperties,
+  clearButton: {
+    background: lightTextColor,
+    color: primaryColor,
+    width: "100%",
+    maxWidth: "150px",
+    borderRadius: "8px",
+    fontSize: "18px",
+    whiteSpace: "nowrap",
+  },
   inMainRightBox: {
     padding: "25px",
     background: primaryColor,
@@ -661,7 +1040,11 @@ const webStyle = {
       WebkitTextFillColor: "#000",
     },
     "& input:-webkit-autofill": {
-      WebkitBoxShadow: "0 0 0px 1000px #FFFFFF inset",
+      WebkitBoxShadow: `0 0 0px 1000px ${lightTextColor} inset`,
+      height: "10px",
+    },
+    "& input::-ms-reveal": {
+      display: "none",
     },
   },
   inputErrorStyle: {
@@ -685,7 +1068,11 @@ const webStyle = {
       fontSize: "16px",
     },
     "& input:-webkit-autofill": {
-      WebkitBoxShadow: "0 0 0px 1000px #FFFFFF inset",
+      WebkitBoxShadow: `0 0 0px 1000px ${lightTextColor} inset`,
+      height: "10px",
+    },
+    "& input::-ms-reveal": {
+      display: "none",
     },
   },
 };
