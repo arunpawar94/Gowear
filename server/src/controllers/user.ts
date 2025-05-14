@@ -78,48 +78,67 @@ export const authenticateUser = async (
 ) => {
   const { email, password, keepMeLoggedIn } = request.body;
   const user = await User.findOne({ email });
-  if (!user || user.password !== password) {
-    response.status(401).json({ message: "Invalid credentials" });
+  if (!user) {
+    response.status(401).json({ message: "error", error: "User not found" });
     return;
   }
+
+  if (user && user.password !== password) {
+    response
+      .status(401)
+      .json({ message: "error", error: "Invalid credentials" });
+    return;
+  }
+
   const accessToken = generateAccessToken(
     (user._id as Types.ObjectId).toString(),
     user.role
   );
+
   const refreshToken = generateRefreshToken(
-    (user._id as Types.ObjectId).toString()
+    (user._id as Types.ObjectId).toString(),
+    keepMeLoggedIn === true ? "7d" : "12h"
+  );
+
+  const userInfo = await User.findOne(
+    { email },
+    { email: 1, role: 1, name: 1, profileImage: 1 }
   );
 
   response.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     secure: true,
     sameSite: "strict",
-    maxAge: keepMeLoggedIn === true ? 7 * 24 * 60 * 60 * 1000 : undefined, // 7 days
+    maxAge:
+      keepMeLoggedIn === true ? 7 * 24 * 60 * 60 * 1000 : 12 * 60 * 60 * 1000, // 7 days or 12 hours
   });
 
-  response.json({ token: accessToken });
+  response.json({
+    message: "success",
+    data: { user: userInfo, token: accessToken },
+  });
 };
 
 export const refreshTokenController = async (req: Request, res: Response) => {
   const token = req.cookies.refreshToken;
   if (!token) {
-    res.status(401).json({ message: "No refresh token" });
+    res.status(401).json({ message: "error", error: "No refresh token" });
     return;
   }
   try {
     const decoded = verifyRefreshToken(token) as { id: string };
     const user = await User.findById(decoded.id);
     if (!user) {
-      res.status(401).json({ message: "User not found" });
+      res.status(401).json({ message: "error", error: "User not found" });
       return;
     }
     const newAccessToken = generateAccessToken(
       (user._id as Types.ObjectId).toString(),
       user.role
     );
-    res.json({ accessToken: newAccessToken });
+    res.json({ message: "success", token: newAccessToken });
   } catch (err) {
-    res.status(403).json({ message: "Invalid refresh token" });
+    res.status(403).json({ message: "error", error: "Invalid refresh token" });
   }
 };
 

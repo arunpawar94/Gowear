@@ -1,9 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import sharedReducer from "./sharedSlice";
+import tokenReducer from "./tokenSlice";
+import userInfoReducer from "./userInfoSlice";
 
 const store = configureStore({
   reducer: {
     shared: sharedReducer,
+    tokenReducer: tokenReducer,
+    userInfoReducer: userInfoReducer
   },
 });
 

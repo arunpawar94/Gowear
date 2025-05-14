@@ -9,9 +9,10 @@ import {
   Typography,
   Badge,
   useMediaQuery,
+  Avatar,
+  Button,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import PersonIcon from "@mui/icons-material/Person";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import gowearImage from "../assets/gowearImageCrope.png";
 import gowearLogoImage from "../assets/gowearLogoTransparent.png";
@@ -22,8 +23,13 @@ import { useNavigate } from "react-router-dom";
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [loggedIn, setLoggedIn] = useState(true);
   const sharedState = useSelector((state: RootState) => state.shared.cartCount);
+  const userInformation = useSelector(
+    (state: RootState) => state.userInfoReducer
+  );
+  const accessToken = useSelector(
+    (state: RootState) => state.tokenReducer.token
+  );
   const size450 = useMediaQuery("(min-width:450px)");
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,19 +76,33 @@ const Header: React.FC = () => {
           />
         </Box>
       </Box>
-      {loggedIn ? (
-        <IconButton aria-label="cart" title="Go to Cart">
-          <Badge badgeContent={sharedState} sx={webStyle.badgeCountStyle}>
-            <ShoppingCartIcon style={{ color: primaryColor }} />
-          </Badge>
-        </IconButton>
-      ) : (
-        <Box style={webStyle.logInButtonBox}>
-          <IconButton onClick={() => handleNavigation("loginSignUp")}>
-            <PersonIcon style={{ color: "#65279b" }} />
+      {accessToken ? (
+        <>
+          <IconButton aria-label="cart" title="Go to Cart">
+            <Badge badgeContent={sharedState} sx={webStyle.badgeCountStyle}>
+              <ShoppingCartIcon style={{ color: primaryColor }} />
+            </Badge>
           </IconButton>
-          <Typography style={webStyle.logIn}>{consfigJSON.logIn}</Typography>
-        </Box>
+          <Box style={webStyle.logInButtonBox}>
+            <IconButton>
+              <Avatar
+                style={{ color: "#65279b" }}
+                src={userInformation.profileImage}
+                alt="user_image"
+              />
+            </IconButton>
+            <Typography style={webStyle.logIn}>
+              {userInformation.name}
+            </Typography>
+          </Box>
+        </>
+      ) : (
+        <Button
+          sx={webStyle.signInButton}
+          onClick={() => handleNavigation("loginSignUp")}
+        >
+          {consfigJSON.logIn}
+        </Button>
       )}
     </Box>
   );
@@ -98,7 +118,7 @@ const webStyle = {
     justifyContent: "space-between",
     boxShadow: "0px 0px 10px 0px #965cf6",
     padding: "15px",
-    gap: "25px"
+    gap: "25px",
   },
   badgeCountStyle: {
     "& .MuiBadge-badge": {
@@ -114,6 +134,13 @@ const webStyle = {
   logIn: {
     fontSize: "12px",
     color: primaryColor,
+  },
+  signInButton: {
+    background: primaryColor,
+    color: "#fff",
+    width: "100px",
+    borderRadius: "8px",
+    fontSize: "18px",
   },
   comLogoImage: {
     width: "120px",
