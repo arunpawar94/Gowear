@@ -24,6 +24,10 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { linkedInIcon, gitHubIcon } from "../../config/assets";
 import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../redux/store";
+import { setAccessToken } from "../../redux/tokenSlice";
+import { setUserInformationReducer } from "../../redux/userInfoSlice";
 
 const base_url = process.env.REACT_APP_API_URL;
 
@@ -95,6 +99,7 @@ export default function LoginSignUp() {
     useState<boolean>(false);
 
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const dispatch = useDispatch<AppDispatch>();
 
   const textShow = action === "signIn" ? signInTexts : signUpTexts;
   const match600 = useMediaQuery("(max-width:600px)");
@@ -106,6 +111,10 @@ export default function LoginSignUp() {
 
   const handleAcceptPolicyChange = () => {
     setAcceptPolicy(!acceptPolicy);
+  };
+
+  const handleKeepMeLoggedInChange = () => {
+    setKeepLoggedIn(!keepLoggedIn);
   };
 
   const handleInputChange = (
@@ -190,8 +199,7 @@ export default function LoginSignUp() {
         !inputErrors.emailErr &&
         !inputErrors.passwordErr
       ) {
-        setSuccessSnackbarMsg("Log in successfully!");
-        handleReset();
+        handleLogin();
       }
     }
   };
@@ -217,7 +225,7 @@ export default function LoginSignUp() {
       });
   };
 
-  const verifyOtpApi = (OtpFor: "verifyEmail") => {
+  const verifyOtpApi = (_OtpFor: "verifyEmail") => {
     const bodyData = {
       email: emailId,
       otp: otp.join(""),
@@ -235,6 +243,36 @@ export default function LoginSignUp() {
       .catch((error) => {
         setErrorSnackbarMsg(error.response.data.error);
       });
+  };
+
+  const handleLogin = async () => {
+    axios
+      .post(
+        `${base_url}/users/login`,
+        {
+          email: emailId,
+          password,
+          keepMeLoggedIn: keepLoggedIn,
+        },
+        {
+          withCredentials: true,
+        }
+      )
+      .then((response) => {
+        const responseUserData = response.data.data.user;
+        const userInformation = {
+          id: responseUserData._id,
+          email: responseUserData.email,
+          name: responseUserData.name,
+          role: responseUserData.role,
+          profileImage: responseUserData.profileImage.imgUrl,
+        };
+        dispatch(setAccessToken(response.data.data.token));
+        dispatch(setUserInformationReducer(userInformation));
+        setSuccessSnackbarMsg("Log in successfully!");
+        handleReset();
+      })
+      .catch((error) => setErrorSnackbarMsg(error.response.data.error));
   };
 
   const handleErrors = () => {
@@ -616,6 +654,7 @@ export default function LoginSignUp() {
                     <Checkbox
                       sx={webStyle.checkboxCheckedColor}
                       checked={keepLoggedIn}
+                      onClick={handleKeepMeLoggedInChange}
                     />
                     <Typography>{configJSON.keepMeLogIn}</Typography>
                   </Box>
@@ -781,7 +820,6 @@ export default function LoginSignUp() {
       </Box>
     );
   };
-
   return (
     <Box style={webStyle.mainBox}>
       {!resetVerifyAction ? (

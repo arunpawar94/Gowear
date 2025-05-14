@@ -32,3 +32,4 @@ yarn-error.log*
 # Miscellaneous
 .DS_Store
 server/.env
+client/.env
