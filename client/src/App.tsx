@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useAuth } from "./hooks/useAuth";
 import LoginSignUp from "./pages/LoginSignUp/LoginSignUp";
 import Home from "./pages/Home/Home";
 import AddProduct from "./pages/AddProducts/AddProduct";
@@ -6,6 +7,7 @@ import Header from "./components/Header";
 import Footer from "./components/footer";
 
 function App() {
+  useAuth();
   return (
     <BrowserRouter>
       <Header />

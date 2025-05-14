@@ -24,6 +24,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { linkedInIcon, gitHubIcon } from "../../config/assets";
 import axios from "axios";
+import axoisApi from "../../utils/axios";
 
 const base_url = process.env.REACT_APP_API_URL;
 
@@ -190,8 +191,9 @@ export default function LoginSignUp() {
         !inputErrors.emailErr &&
         !inputErrors.passwordErr
       ) {
-        setSuccessSnackbarMsg("Log in successfully!");
-        handleReset();
+        // setSuccessSnackbarMsg("Log in successfully!");
+        // handleReset();
+        handleLogin();
       }
     }
   };
@@ -217,7 +219,7 @@ export default function LoginSignUp() {
       });
   };
 
-  const verifyOtpApi = (OtpFor: "verifyEmail") => {
+  const verifyOtpApi = (_OtpFor: "verifyEmail") => {
     const bodyData = {
       email: emailId,
       otp: otp.join(""),
@@ -235,6 +237,22 @@ export default function LoginSignUp() {
       .catch((error) => {
         setErrorSnackbarMsg(error.response.data.error);
       });
+  };
+
+  const handleLogin = async () => {
+    try {
+      const loginResponse = await axoisApi.post("/users/login", {
+        email: emailId,
+        password,
+        keepMeLoggedIn: keepLoggedIn,
+      });
+      // redirect or fetch user info
+      if(loginResponse){
+        console.log("@@@@", loginResponse)
+      }
+    } catch (err) {
+      console.error("Login failed", err);
+    }
   };
 
   const handleErrors = () => {
