@@ -6,11 +6,15 @@ import {
   validateImageFiles,
 } from "../validators/productValidator";
 import { validationResult } from "express-validator";
+import authMiddleware from "../middleware/authMiddleware";
+import authorizeRoles from "../middleware/authorizeRoles";
 
 const router = Router();
 
 router.post(
   "/add_product",
+  authMiddleware,
+  authorizeRoles("productManager", "admin"),
   upload.any(),
   productValidator,
   (req: Request, res: Response, next: NextFunction): void => {

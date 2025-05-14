@@ -228,7 +228,7 @@ export default function LoginSignUp() {
           "Content-Type": "application/json",
         },
       })
-      .then((response) => {
+      .then((_response) => {
         setSuccessSnackbarMsg("Email verified successfully!");
         handleResetLoginClick();
       })
