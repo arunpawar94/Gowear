@@ -2,12 +2,14 @@ import { configureStore } from "@reduxjs/toolkit";
 import sharedReducer from "./sharedSlice";
 import tokenReducer from "./tokenSlice";
 import userInfoReducer from "./userInfoSlice";
+import snackbarMsgReducer from "./snackbarMsgsSlice";
 
 const store = configureStore({
   reducer: {
     shared: sharedReducer,
     tokenReducer: tokenReducer,
-    userInfoReducer: userInfoReducer
+    userInfoReducer: userInfoReducer,
+    snackbarSliceReducer: snackbarMsgReducer,
   },
 });
 

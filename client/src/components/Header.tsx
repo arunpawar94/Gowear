@@ -1,6 +1,8 @@
-import React, { useState } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "../redux/store";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../redux/store";
+import { setAccessToken } from "../redux/tokenSlice";
+import { clearUserInformationReducer } from "../redux/userInfoSlice";
 import {
   Box,
   TextField,
@@ -11,6 +13,8 @@ import {
   useMediaQuery,
   Avatar,
   Button,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
@@ -22,7 +26,11 @@ import { useNavigate } from "react-router-dom";
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
   const [search, setSearch] = useState("");
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [profileImage, setProfileImage] = useState("");
+
   const sharedState = useSelector((state: RootState) => state.shared.cartCount);
   const userInformation = useSelector(
     (state: RootState) => state.userInfoReducer
@@ -32,6 +40,12 @@ const Header: React.FC = () => {
   );
   const size450 = useMediaQuery("(min-width:450px)");
 
+  useEffect(() => {
+    if (userInformation.profileImage) {
+      setProfileImage(userInformation.profileImage);
+    }
+  }, [userInformation.profileImage]);
+
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setSearch(value);
@@ -39,6 +53,23 @@ const Header: React.FC = () => {
 
   const handleNavigation = (route: string) => {
     navigate(`/${route}`);
+  };
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    dispatch(setAccessToken(null));
+    dispatch(clearUserInformationReducer());
+    document.cookie =
+      "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    handleMenuClose();
+    navigate("/");
   };
 
   return (
@@ -84,10 +115,10 @@ const Header: React.FC = () => {
             </Badge>
           </IconButton>
           <Box style={webStyle.logInButtonBox}>
-            <IconButton>
+            <IconButton onClick={handleMenuOpen}>
               <Avatar
                 style={{ color: "#65279b" }}
-                src={userInformation.profileImage}
+                src={profileImage}
                 alt="user_image"
               />
             </IconButton>
@@ -104,6 +135,19 @@ const Header: React.FC = () => {
           {consfigJSON.logIn}
         </Button>
       )}
+      <Menu
+        id="basic-menu"
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        MenuListProps={{
+          "aria-labelledby": "basic-button",
+        }}
+      >
+        <MenuItem onClick={handleMenuClose}>{consfigJSON.logout}</MenuItem>
+        <MenuItem onClick={handleMenuClose}>{consfigJSON.myAccount}</MenuItem>
+        <MenuItem onClick={handleLogout}>{consfigJSON.logout}</MenuItem>
+      </Menu>
     </Box>
   );
 };
@@ -112,7 +156,7 @@ export default Header;
 
 const webStyle = {
   mainBox: {
-    height: "40px",
+    height: "50px",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
@@ -134,6 +178,7 @@ const webStyle = {
   logIn: {
     fontSize: "12px",
     color: primaryColor,
+    whiteSpace: "nowrap",
   },
   signInButton: {
     background: primaryColor,

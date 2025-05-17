@@ -4,7 +4,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IUser extends Document {
   name: string;
   email: string;
-  password: string;
+  password?: string;
   role: "user" | "product_manager" | "admin";
   profileImage: {
     imgUrl: string;
@@ -28,7 +28,15 @@ const userSchema: Schema = new Schema(
       required: [true, "User email is required."],
       unique: true,
     },
-    password: { type: String, required: [true, "Password is required."] },
+    password: {
+      type: String,
+      required: [
+        function (this: IUser) {
+          return this.methodToSignUpLogin === "email";
+        },
+        "Password is required.",
+      ],
+    },
     role: {
       type: String,
       required: [true, "Type of user is required."],

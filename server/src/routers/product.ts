@@ -23,7 +23,7 @@ router.post(
       .array()
       .flatMap((item) => (Array.isArray(item.msg) ? item.msg : [item.msg]));
     if (!errors.isEmpty()) {
-      res.status(400).json({ message: "Error", errors: errorsArray });
+      res.status(400).json({ message: "error", errors: errorsArray });
       return;
     }
     next();
