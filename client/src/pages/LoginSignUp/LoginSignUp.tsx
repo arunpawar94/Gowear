@@ -24,12 +24,14 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { linkedInIcon, gitHubIcon } from "../../config/assets";
 import axios from "axios";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../../redux/store";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "../../redux/store";
 import { setAccessToken } from "../../redux/tokenSlice";
 import { setUserInformationReducer } from "../../redux/userInfoSlice";
+import { useLocation } from "react-router-dom";
 
 const base_url = process.env.REACT_APP_API_URL;
+const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 
 const signInTexts = {
   activeHeading: configJSON.signIn,
@@ -100,6 +102,7 @@ export default function LoginSignUp() {
 
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const dispatch = useDispatch<AppDispatch>();
+  const location = useLocation();
 
   const textShow = action === "signIn" ? signInTexts : signUpTexts;
   const match600 = useMediaQuery("(max-width:600px)");
@@ -115,6 +118,32 @@ export default function LoginSignUp() {
 
   const handleKeepMeLoggedInChange = () => {
     setKeepLoggedIn(!keepLoggedIn);
+  };
+
+  const handleSocialSignInSignUp = (provider: string) => {
+    let authUrl = "";
+    const state = Math.random().toString(36).substring(2);
+    if (action === "signUp") {
+      localStorage.setItem("role", userType as string);
+    }
+    if (action === "signIn") {
+      localStorage.setItem("keepLoggedIn", keepLoggedIn.toString());
+    }
+    switch (provider) {
+      case "google":
+        authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=http://localhost:3000/auth/${action}?provider=google&response_type=code&scope=openid email profile`;
+        break;
+      // case "facebook":
+      //   authUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${process.env.REACT_APP_FACEBOOK_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&state=${state}&scope=email,public_profile`;
+      //   break;
+      // case "github":
+      //   authUrl = `https://github.com/login/oauth/authorize?client_id=${process.env.REACT_APP_GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=user:email`;
+      //   break;
+      // case "linkedin":
+      //   authUrl = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${process.env.REACT_APP_LINKEDIN_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=r_liteprofile%20r_emailaddress`;
+      //   break;
+    }
+    window.location.href = authUrl;
   };
 
   const handleInputChange = (
@@ -540,21 +569,28 @@ export default function LoginSignUp() {
               {textShow.activeHeading}
             </Typography>
             <Box style={webStyle.iconWrapperBox}>
-              {[GoogleIcon, FacebookOutlinedIcon, gitHubIcon, linkedInIcon].map(
-                (Item, index) => (
-                  <Box key={index} style={webStyle.iconBox}>
-                    {index === 0 || index === 1 ? (
-                      <Item style={{ color: primaryColor }} />
-                    ) : (
-                      <img
-                        src={Item}
-                        alt="loginSocialIcon"
-                        style={webStyle.socialIconImages}
-                      />
-                    )}
-                  </Box>
-                )
-              )}
+              {[
+                { Icon: GoogleIcon, label: "google" },
+                { Icon: FacebookOutlinedIcon, label: "facebook" },
+                { Icon: gitHubIcon, label: "github" },
+                { Icon: linkedInIcon, label: "linkedin" },
+              ].map((Item, index) => (
+                <Box
+                  key={index}
+                  style={webStyle.iconBox}
+                  onClick={() => handleSocialSignInSignUp(Item.label)}
+                >
+                  {index === 0 || index === 1 ? (
+                    <Item.Icon style={{ color: primaryColor }} />
+                  ) : (
+                    <img
+                      src={Item.Icon}
+                      alt="loginSocialIcon"
+                      style={webStyle.socialIconImages}
+                    />
+                  )}
+                </Box>
+              ))}
             </Box>
             <Typography style={webStyle.emailPassSubText}>
               {textShow.activeSubText}

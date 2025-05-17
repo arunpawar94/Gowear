@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import User from "../models/userModel";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-  verifyRefreshToken,
-} from "../utils/jwtToken";
+import { generateAccessToken, verifyRefreshToken } from "../utils/jwtToken";
 import { Types } from "mongoose";
+import {
+  createNewUser,
+  authenticateExistingUser,
+} from "../services/authService";
 
 export const getAllUsers = async (
   req: Request,
@@ -41,7 +41,7 @@ export const createUser = async (
       emailVerified: false,
       accountVerified: role === "user",
     };
-    const newUser = new User({
+    const newUser = await createNewUser({
       ...rawData,
       name,
       email,
@@ -50,24 +50,21 @@ export const createUser = async (
       methodToSignUpLogin,
       termsAndPolicies,
     });
-    await newUser.save();
     res.status(201).json({ message: "success", data: newUser });
-  } catch (errors: any) {
-    if (errors.name === "ValidationError") {
-      const UpdateError: Record<string, string> = {};
-      for (const key in errors.errors) {
-        UpdateError[key] = errors.errors[key].message;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      if (err.name === "ValidationError") {
+        const errorArray = err.message.split(",").map((e) => e.trim());
+        res.status(400).json({ message: "error", errors: errorArray });
       }
-      let errorArray = Object.values(UpdateError);
-      res.status(400).json({ message: "error", errors: errorArray });
+      if (err.name === "UserExistsError") {
+        res.status(400).json({ message: "error", errors: err.message });
+      }
     } else {
-      if (errors.code === 11000 && errors.keyValue.email) {
-        res
-          .status(400)
-          .json({ message: "error", errors: "Email already exists." });
-      } else {
-        res.status(400).json({ message: "error", errors });
-      }
+      res.status(500).json({
+        message: "error",
+        errors: [err instanceof Error ? err.message : "Unknown server error"],
+      });
     }
   }
 };
@@ -76,47 +73,44 @@ export const authenticateUser = async (
   request: Request,
   response: Response
 ) => {
-  const { email, password, keepMeLoggedIn } = request.body;
-  const user = await User.findOne({ email });
-  if (!user) {
-    response.status(401).json({ message: "error", error: "User not found" });
-    return;
-  }
+  const { email, password, keepMeLoggedIn, methodToSignUpLogin } = request.body;
 
-  if (user && user.password !== password) {
-    response
-      .status(401)
-      .json({ message: "error", error: "Invalid credentials" });
-    return;
-  }
+  const loginCredential = {
+    email,
+    password,
+    keepMeLoggedIn,
+    methodToSignUpLogin,
+  };
 
-  const accessToken = generateAccessToken(
-    (user._id as Types.ObjectId).toString(),
-    user.role
-  );
+  authenticateExistingUser(loginCredential)
+    .then((authResponse) => {
+      response.cookie("refreshToken", authResponse.refreshToken, {
+        // httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        maxAge:
+          keepMeLoggedIn === true
+            ? 7 * 24 * 60 * 60 * 1000
+            : 12 * 60 * 60 * 1000, // 7 days or 12 hours
+      });
 
-  const refreshToken = generateRefreshToken(
-    (user._id as Types.ObjectId).toString(),
-    keepMeLoggedIn === true ? "7d" : "12h"
-  );
-
-  const userInfo = await User.findOne(
-    { email },
-    { email: 1, role: 1, name: 1, profileImage: 1 }
-  );
-
-  response.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "strict",
-    maxAge:
-      keepMeLoggedIn === true ? 7 * 24 * 60 * 60 * 1000 : 12 * 60 * 60 * 1000, // 7 days or 12 hours
-  });
-
-  response.json({
-    message: "success",
-    data: { user: userInfo, token: accessToken },
-  });
+      response.json({
+        message: "success",
+        data: { user: authResponse.user, token: authResponse.accessToken },
+      });
+    })
+    .catch((errors: unknown) => {
+      if (errors instanceof Error) {
+        response.status(400).json({ message: "error", error: errors.message });
+      } else {
+        response.status(500).json({
+          message: "error",
+          errors: [
+            errors instanceof Error ? errors.message : "Unknown server error",
+          ],
+        });
+      }
+    });
 };
 
 export const refreshTokenController = async (req: Request, res: Response) => {
