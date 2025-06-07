@@ -80,7 +80,6 @@ export const googleLogin = async (req: Request, res: Response) => {
       });
     }
   } catch (err: unknown) {
-    console.log("@@@@", err);
     if (err instanceof Error) {
       if (err.name === "ValidationError") {
         const errorArray = err.message.split(",").map((e) => e.trim());

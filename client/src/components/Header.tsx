@@ -80,14 +80,18 @@ const Header: React.FC = () => {
             src={gowearImage}
             alt="gowearImage"
             style={webStyle.comLogoImage}
+            onClick={()=>handleNavigation("")}
           />
         ) : (
           <img
             src={gowearLogoImage}
             alt="gowearImage"
-            style={{ width: "40px" }}
+            style={{ width: "40px", cursor: "pointer" }}
+            onClick={()=>handleNavigation("")}
           />
         )}
+        <Button onClick={()=>handleNavigation("addProduct")}>Add Product</Button>
+        <Button onClick={()=>handleNavigation("loginSignUp")}>logIn</Button>
         <Box flexGrow={1} style={{ width: "100%", maxWidth: "500px" }}>
           <TextField
             type="text"
@@ -189,6 +193,7 @@ const webStyle = {
   },
   comLogoImage: {
     width: "120px",
+    cursor: "pointer"
   },
   searchInputStyle: {
     "& .MuiOutlinedInput-root": {

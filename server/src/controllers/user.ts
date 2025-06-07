@@ -136,11 +136,21 @@ export const refreshTokenController = async (req: Request, res: Response) => {
   }
 };
 
-export const logoutController = (req: Request, res: Response) => {
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: true,
-    sameSite: "strict",
-  });
-  res.json({ message: "Logged out" });
+export const getUserInfo = async (req: Request, res: Response) => {
+  const userData = req.user;
+  if (userData) {
+    const userInfo = {
+      _id: userData._id,
+      email: userData.email,
+      name: userData.name,
+      role: userData.role,
+      profileImage: userData.profileImage,
+    };
+    res.status(200).json({
+      message: "success",
+      data: userInfo,
+    });
+  } else {
+    res.status(401).json({ message: "error", error: "User not found" });
+  }
 };

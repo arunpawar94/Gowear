@@ -53,18 +53,18 @@ export const AuthCallback = () => {
         keepMeLoggedIn: keepLoggedIn,
         methodToSignUpLogin: providerName,
         code,
-        redirectUri: window.location.origin + "/auth/signIn?provider=google",
+        redirectUri: window.location.origin + `/auth/signIn?provider=${providerName}`,
       };
       const signUpData = {
         role: userRole,
         methodToSignUpLogin: providerName,
         termsAndPolicies: true,
         code,
-        redirectUri: window.location.origin + "/auth/signUp?provider=google",
+        redirectUri: window.location.origin + `/auth/signUp?provider=${providerName}`,
       };
       const bodyData = action === "signUp" ? signUpData : signInData;
       axios
-        .post(`${base_url}/users/auth/google`, bodyData, {
+        .post(`${base_url}/users/auth/${providerName}`, bodyData, {
           params: {
             action: action,
           },
@@ -145,12 +145,10 @@ export const AuthCallback = () => {
 const webStyle = {
   mainBox: {
     height: "80vh",
-    border: "1px solid red",
     display: "flex",
     alignItems: "center",
   },
   modalBox: {
-    border: "1px solid red",
     height: "100vh",
     display: "flex",
     flexDirection: "column",

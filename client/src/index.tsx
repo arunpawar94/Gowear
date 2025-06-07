@@ -5,6 +5,7 @@ import store from "../src/redux/store";
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { AuthProvider } from '../src/contexts/authContext';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -12,7 +13,9 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <Provider store={store}>
-      <App />
+      <AuthProvider> {/* ✅ Now wrapping App */}
+        <App />
+      </AuthProvider>
     </Provider>
   </React.StrictMode>
 );
