@@ -18,7 +18,7 @@ const authMiddleware = async (
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith("Bearer ")) {
-    res.status(401).json({ message: "No token provided" });
+    res.status(401).json({ message: "error", data: "No token provided."});
     return;
   }
 
