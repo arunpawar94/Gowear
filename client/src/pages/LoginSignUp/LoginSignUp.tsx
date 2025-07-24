@@ -218,7 +218,7 @@ export default function LoginSignUp() {
     }
   };
 
-  const sendOtpApi = (OtpFor: "verifyEmail" | "resendVerifyEmail") => {
+  const sendOtpApi = (OtpFor: "verifyEmail" | "resendVerifyEmail" | "verifyLoginEmail") => {
     const bodyData = { email: emailId };
     axios
       .post(`${base_url}/otp_verify/request`, bodyData, {
@@ -229,6 +229,10 @@ export default function LoginSignUp() {
       .then((_response) => {
         if (OtpFor === "verifyEmail") {
           setResetVerifyAction("signUpVerify");
+        }
+        if (OtpFor === "verifyLoginEmail") {
+          setResetVerifyAction("signUpVerify");
+          setSuccessSnackbarMsg("OTP send to your reginstered email.");
         }
         if (OtpFor === "resendVerifyEmail") {
           setSuccessSnackbarMsg("OTP send successfully!");
@@ -286,7 +290,13 @@ export default function LoginSignUp() {
         setSuccessSnackbarMsg("Log in successfully!");
         handleReset();
       })
-      .catch((error) => setErrorSnackbarMsg(error.response.data.error));
+      .catch((error) => {
+        setErrorSnackbarMsg(error.response.data.error)
+        if(error.response.data.error === "Email not verified.") {
+          setCheckSubmit(false);
+          sendOtpApi("verifyLoginEmail");
+        }
+      });
   };
 
   const handleErrors = () => {

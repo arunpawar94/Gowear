@@ -103,6 +103,18 @@ export const authenticateExistingUser = async (
     }
   }
 
+  if (user && user.emailVerified === false) {
+    const error = new Error("Email not verified.");
+    error.name = "UnverifiedEmail";
+    throw error;
+  }
+
+  if (user && user.role !== "user" && user.accountVerified === false) {
+    const error = new Error("Account not approved by admin.");
+    error.name = "NotApproved";
+    throw error;
+  }
+
   const accessToken = generateAccessToken(
     (user._id as Types.ObjectId).toString(),
     user.role

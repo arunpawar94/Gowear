@@ -1,10 +1,10 @@
 import OTPModel from "../models/otpModel";
 import userModel from "../models/userModel";
 import bcrypt from "bcryptjs";
-import sgMail from "@sendgrid/mail";
 import { Request, Response } from "express";
+import axios from "axios";
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+const BrevoAPIKey = process.env.BREVO_API_KEY!;
 
 export const sendOtp = async (req: Request, res: Response) => {
   const { email } = req.body;
@@ -21,29 +21,34 @@ export const sendOtp = async (req: Request, res: Response) => {
   }
   try {
     await OTPModel.create({ email, otp: hashedOtp });
-    const msg = {
-      to: email,
-      from: {
-        email: "gowear@yopmail.com",
-        name: "Gowear",
-      },
-      subject: "Otp to verify email",
-      text: `Please verify Your OTP is ${otp}. It will expire in 5 minutes.`,
-      html: `<span>
+    await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: { name: "Gowear", email: "arunpawar94@gmail.com" },
+        to: [{ email: email, name: regRecord.name }],
+        subject: "Otp to verify email",
+        text: `Please verify Your OTP is ${otp}. It will expire in 5 minutes.`,
+        htmlContent: `<span>
             Hello,
             <br/><br/>Thank you for signing up. Please use the following One-Time Password (OTP) to verify your email address:
-            <br/><br/>OTP: ${otp}
+            <br/><br/>OTP: <b>${otp}</b>
             <br/><br/>This code will expire in 10 minutes. If you did not request this, you can safely ignore this email.
             <br/><br/>Best regards,  
             <br/><br/>Gowear Support Team
           </span>`,
-    };
-    await sgMail.send(msg);
+      },
+      {
+        headers: {
+          "api-key": BrevoAPIKey,
+          "Content-Type": "application/json",
+        },
+      }
+    );
     res
       .status(200)
       .json({ message: "success", data: "OTP sent successfully." });
   } catch (err: any) {
-    res.status(500).json({ message: "error", error: err });
+    res.status(500).json({ message: "error", error: "Something went wrong" });
   }
 };
 
