@@ -17,6 +17,7 @@ import { AppDispatch } from "./redux/store";
 import { setAccessToken } from "./redux/tokenSlice";
 import axios from "axios";
 import { setUserInformationReducer } from "./redux/userInfoSlice";
+import UserList from "./pages/UsersList/UserList";
 
 const base_url = process.env.REACT_APP_API_URL;
 
@@ -92,6 +93,14 @@ function App() {
             <UnauthOnlyRoute>
               <AuthCallback />
             </UnauthOnlyRoute>
+          }
+        />
+        <Route
+          path="/showUserList"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <UserList />
+            </ProtectedRoute>
           }
         />
       </Routes>
