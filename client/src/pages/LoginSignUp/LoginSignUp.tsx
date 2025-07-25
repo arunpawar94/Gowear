@@ -218,7 +218,9 @@ export default function LoginSignUp() {
     }
   };
 
-  const sendOtpApi = (OtpFor: "verifyEmail" | "resendVerifyEmail" | "verifyLoginEmail") => {
+  const sendOtpApi = (
+    OtpFor: "verifyEmail" | "resendVerifyEmail" | "verifyLoginEmail"
+  ) => {
     const bodyData = { email: emailId };
     axios
       .post(`${base_url}/otp_verify/request`, bodyData, {
@@ -291,8 +293,8 @@ export default function LoginSignUp() {
         handleReset();
       })
       .catch((error) => {
-        setErrorSnackbarMsg(error.response.data.error)
-        if(error.response.data.error === "Email not verified.") {
+        setErrorSnackbarMsg(error.response.data.error);
+        if (error.response.data.error === "Email not verified.") {
           setCheckSubmit(false);
           sendOtpApi("verifyLoginEmail");
         }
@@ -594,12 +596,6 @@ export default function LoginSignUp() {
                     value="product_manager"
                     control={<Radio sx={webStyle.radioButtonStyle} />}
                     label="Product Manager"
-                    sx={webStyle.radioControllerStyle}
-                  />
-                  <FormControlLabel
-                    value="admin"
-                    control={<Radio sx={webStyle.radioButtonStyle} />}
-                    label="Admin"
                     sx={webStyle.radioControllerStyle}
                   />
                 </RadioGroup>

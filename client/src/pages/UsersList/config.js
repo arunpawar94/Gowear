@@ -1,1 +1,9 @@
 exports.users = "Users";
+exports.view = "view";
+exports.changeAdminApproveStatus = "Change Admin Approve Status:";
+exports.confirm = "confirm";
+exports.cancel = "cancel";
+exports.change = "change";
+exports.pending = "pending";
+exports.approve = "approve";
+exports.reject = "reject";

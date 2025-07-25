@@ -14,16 +14,23 @@ import {
   Checkbox,
   IconButton,
   Tooltip,
+  Button,
+  Modal,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   lightTextColor,
   primaryColor,
   extraLightPrimaryColor,
+  pendingColor,
+  approvedColor,
+  rejectedColor,
 } from "../../config/colors";
 import consfigJSON from "./config";
 
-import * as React from "react";
-import { alpha } from "@mui/material/styles";
+import { useState, useMemo } from "react";
+import { alpha, styled } from "@mui/material/styles";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { visuallyHidden } from "@mui/utils";
@@ -36,6 +43,9 @@ interface Data {
   emailVerification: string;
   adminVerification: string;
 }
+
+type OpenModal = "adminStatus" | "confirmStatus" | "confirmDelete" | null;
+type SelectedAdminStatus = "pending" | "approved" | "rejected" | null;
 
 function createData(
   id: number,
@@ -239,6 +249,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
             padding={headCell.disablePadding ? "none" : "normal"}
             sortDirection={orderBy === headCell.id ? order : false}
             sx={webStyle.tableHeadCell}
+            colSpan={headCell.label === "Admin Approve" ? 2 : 1}
           >
             <TableSortLabel
               active={orderBy === headCell.id}
@@ -312,14 +323,22 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
 }
 
 export default function UserList() {
-  const [order, setOrder] = React.useState<Order>("asc");
-  const [orderBy, setOrderBy] = React.useState<keyof Data>("name");
-  const [selected, setSelected] = React.useState<readonly number[]>([]);
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [order, setOrder] = useState<Order>("asc");
+  const [orderBy, setOrderBy] = useState<keyof Data>("name");
+  const [selected, setSelected] = useState<readonly number[]>([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [showModal, setShowModal] = useState<OpenModal>(null);
+  const [selectAdminStatus, setSelectAdminStatus] =
+    useState<SelectedAdminStatus>(null);
+  const [selectedRow, setSelectedRow] = useState<Data | null>(null);
+  const [snackbarErrorMessage, setSnackbarErrorMessage] = useState<
+    string | null
+  >(null);
+  const [modalHeadingText, setModalHeadingText] = useState<string | null>(null);
 
   const handleRequestSort = (
-    event: React.MouseEvent<unknown>,
+    _event: React.MouseEvent<unknown>,
     property: keyof Data
   ) => {
     const isAsc = orderBy === property && order === "asc";
@@ -370,19 +389,74 @@ export default function UserList() {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  const visibleRows = React.useMemo(
+  const visibleRows = useMemo(
     () =>
       [...rows]
         .sort(getComparator(order, orderBy))
         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
     [order, orderBy, page, rowsPerPage]
   );
+
+  const handleStatusColor = (value: string) => {
+    let color = pendingColor;
+    if (value === "rejected") {
+      color = rejectedColor;
+    } else if (value === "approved" || value === "verified") {
+      color = approvedColor;
+    }
+    return color;
+  };
+
+  const handleModalClose = () => {
+    setShowModal(null);
+    setSelectedRow(null);
+    setSelectAdminStatus(null);
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarErrorMessage(null);
+  };
+
+  const handleAdminStatusChange = (status: SelectedAdminStatus) => {
+    setSelectAdminStatus(status);
+  };
+
+  const handleAdminVeificationClick = (selectedRowData: Data | null) => {
+    if (selectedRowData) {
+      if (selectedRowData.role === "user") {
+        setSnackbarErrorMessage("Admin approve is not required for user");
+        return;
+      }
+      setModalHeadingText(consfigJSON.changeAdminApproveStatus);
+      setSelectedRow(selectedRowData);
+      setShowModal("adminStatus");
+    }
+  };
+
+  const handleStatusChangeClick = () => {
+    if (selectAdminStatus === null) {
+      setSnackbarErrorMessage("Please select status to change!");
+      return;
+    }
+    setShowModal("confirmStatus");
+    setModalHeadingText("Confirm to change:");
+  };
+
+  const handleModalAdminStatusButtonShow = (buttonStatus: string) => {
+    return (
+      (showModal === "adminStatus" &&
+        selectedRow &&
+        selectedRow.adminVerification !== buttonStatus) ||
+      (showModal === "confirmStatus" && selectAdminStatus === buttonStatus)
+    );
+  };
+
   return (
     <Box style={webStyle.mainBox}>
       <Typography style={webStyle.addProductHeadingText}>
         {consfigJSON.users}
       </Typography>
-      <Paper sx={{ width: "100%", mb: 2 }}>
+      <Paper sx={webStyle.paperStyle}>
         <EnhancedTableToolbar numSelected={selected.length} />
         <TableContainer>
           <Table
@@ -406,7 +480,6 @@ export default function UserList() {
                 return (
                   <TableRow
                     hover
-                    onClick={(event) => handleClick(event, row.id)}
                     role="checkbox"
                     aria-checked={isItemSelected}
                     tabIndex={-1}
@@ -422,6 +495,7 @@ export default function UserList() {
                           "aria-labelledby": labelId,
                         }}
                         sx={webStyle.checkBoxCheckedColor}
+                        onClick={(event) => handleClick(event, row.id)}
                       />
                     </TableCell>
                     <TableCell
@@ -443,15 +517,38 @@ export default function UserList() {
                     </TableCell>
                     <TableCell
                       align="left"
-                      style={{ textTransform: "capitalize" }}
+                      style={{
+                        textTransform: "capitalize",
+                        fontWeight: "bold",
+                        color: handleStatusColor(row.emailVerification),
+                      }}
                     >
                       {row.emailVerification}
                     </TableCell>
                     <TableCell
                       align="left"
-                      style={{ textTransform: "capitalize" }}
+                      style={{
+                        textTransform: "capitalize",
+                        fontWeight: "bold",
+                      }}
                     >
-                      {row.adminVerification}
+                      <Button
+                        sx={{
+                          ...webStyle.buttonStyle,
+                          backgroundColor: handleStatusColor(
+                            row.adminVerification
+                          ),
+                          width: "100px",
+                        }}
+                        onClick={() => handleAdminVeificationClick(row)}
+                      >
+                        {row.adminVerification}
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      <Button sx={webStyle.buttonStyle}>
+                        {consfigJSON.view}
+                      </Button>
                     </TableCell>
                   </TableRow>
                 );
@@ -478,9 +575,136 @@ export default function UserList() {
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </Paper>
+      <Modal open={Boolean(showModal)} onClose={handleModalClose}>
+        <Box style={webStyle.progressBox}>
+          <Box style={webStyle.addSizeModalInnerBox}>
+            <Typography style={webStyle.addQuantityText}>
+              {modalHeadingText}
+            </Typography>
+            <Box p={1}>
+              {(showModal === "adminStatus" ||
+                showModal === "confirmStatus") && (
+                <Box
+                  style={{
+                    ...webStyle.sizeModalButtonBox,
+                    justifyContent: "space-evenly",
+                  }}
+                >
+                  {selectedRow && (
+                    <>
+                      {handleModalAdminStatusButtonShow("pending") && (
+                        <Button
+                          sx={{
+                            ...webStyle.buttonStyle,
+                            backgroundColor: handleStatusColor("pending"),
+                            width: "100px",
+                            fontSize: "16px",
+                            border:
+                              selectAdminStatus === "pending"
+                                ? `1px solid ${primaryColor}`
+                                : "none",
+                            boxShadow:
+                              selectAdminStatus === "pending"
+                                ? `0px 0px 4px 4px ${primaryColor}`
+                                : "none",
+                          }}
+                          onClick={() => handleAdminStatusChange("pending")}
+                        >
+                          {consfigJSON.pending}
+                        </Button>
+                      )}
+                      {handleModalAdminStatusButtonShow("approved") && (
+                        <Button
+                          sx={{
+                            ...webStyle.buttonStyle,
+                            backgroundColor: handleStatusColor("approved"),
+                            width: "100px",
+                            fontSize: "16px",
+                            border:
+                              selectAdminStatus === "approved"
+                                ? `1px solid ${primaryColor}`
+                                : "none",
+                            boxShadow:
+                              selectAdminStatus === "approved"
+                                ? `0px 0px 4px 4px ${primaryColor}`
+                                : "none",
+                          }}
+                          onClick={() => handleAdminStatusChange("approved")}
+                        >
+                          {consfigJSON.approve}
+                        </Button>
+                      )}
+                      {handleModalAdminStatusButtonShow("rejected") && (
+                        <Button
+                          sx={{
+                            ...webStyle.buttonStyle,
+                            backgroundColor: handleStatusColor("rejected"),
+                            width: "100px",
+                            fontSize: "16px",
+                            border:
+                              selectAdminStatus === "rejected"
+                                ? `1px solid ${primaryColor}`
+                                : "none",
+                            boxShadow:
+                              selectAdminStatus === "rejected"
+                                ? `0px 0px 4px 4px ${primaryColor}`
+                                : "none",
+                          }}
+                          onClick={() => handleAdminStatusChange("rejected")}
+                        >
+                          {consfigJSON.reject}
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </Box>
+              )}
+              <Box style={webStyle.sizeModalButtonBox}>
+                <ClearButton onClick={handleModalClose}>
+                  {consfigJSON.cancel}
+                </ClearButton>
+                {showModal === "adminStatus" ? (
+                  <AddButton onClick={handleStatusChangeClick}>
+                    {consfigJSON.change}
+                  </AddButton>
+                ) : (
+                  <AddButton onClick={handleModalClose}>
+                    {consfigJSON.confirm}
+                  </AddButton>
+                )}
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      </Modal>
+      <Snackbar
+        open={Boolean(snackbarErrorMessage)}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity="error"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbarErrorMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
+
+const AddButton = styled(Button)({
+  background: primaryColor,
+  color: "#fff",
+});
+
+const ClearButton = styled(Button)({
+  background: lightTextColor,
+  color: primaryColor,
+});
 
 const webStyle = {
   mainBox: {
@@ -503,11 +727,10 @@ const webStyle = {
   },
   tableHeadCell: {
     color: primaryColor,
-    fontSize: "18px",
+    fontSize: "16px",
     fontWeight: "bold",
   },
   tableBodyRowStyle: {
-    cursor: "pointer",
     "&.Mui-selected": {
       backgroundColor: extraLightPrimaryColor,
     },
@@ -517,5 +740,47 @@ const webStyle = {
     "& .MuiTableCell-root": {
       fontSize: "16px",
     },
+  },
+  buttonStyle: {
+    background: primaryColor,
+    color: "#fff",
+    borderRadius: "8px",
+    fontSize: "12px",
+    fontWeight: "bold",
+  },
+  paperStyle: {
+    width: "100%",
+    mb: 2,
+    borderRadius: "8px",
+    boxShadow: `0px 0px 16px 2px ${lightTextColor}`,
+  },
+  progressBox: {
+    width: "100vw",
+    height: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addSizeModalInnerBox: {
+    background: "#fff",
+    width: "100%",
+    maxWidth: "400px",
+    minHeight: "150px",
+    borderRadius: "8px",
+    boxShadow: `0px 0px 16px 2px ${primaryColor}`,
+    overflow: "hidden",
+    margin: "0 10px",
+  },
+  addQuantityText: {
+    background: "#000",
+    color: lightTextColor,
+    padding: "10px",
+    fontSize: "20px",
+  },
+  sizeModalButtonBox: {
+    marginTop: "15px",
+    display: "flex",
+    gap: "10px",
+    justifyContent: "space-between",
   },
 };
