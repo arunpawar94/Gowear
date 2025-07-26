@@ -7,3 +7,6 @@ exports.change = "change";
 exports.pending = "pending";
 exports.approve = "approve";
 exports.reject = "reject";
+exports.filter = "Filter";
+exports.selected = "selected";
+exports.deleteConfirmMsg = "Please confirm to delete selected account.";
