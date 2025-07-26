@@ -99,6 +99,7 @@ const Header: React.FC = () => {
             fullWidth
             onChange={handleSearchChange}
             sx={webStyle.searchInputStyle}
+            placeholder="search"
             slotProps={{
               input: {
                 startAdornment: (
