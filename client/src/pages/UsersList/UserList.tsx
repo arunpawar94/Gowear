@@ -898,7 +898,7 @@ export default function UserList() {
       >
         <Alert
           onClose={handleSnackbarClose}
-          severity="error"
+          severity="success"
           variant="filled"
           sx={{ width: "100%" }}
         >
