@@ -93,7 +93,7 @@ export const authenticateUser = async (
             ? 7 * 24 * 60 * 60 * 1000
             : 12 * 60 * 60 * 1000, // 7 days or 12 hours
       });
-
+//afas
       response.json({
         message: "success",
         data: { user: authResponse.user, token: authResponse.accessToken },
