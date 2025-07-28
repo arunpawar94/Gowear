@@ -85,8 +85,9 @@ export const authenticateUser = async (
   authenticateExistingUser(loginCredential)
     .then((authResponse) => {
       response.cookie("refreshToken", authResponse.refreshToken, {
+        httpOnly: false,
         secure: true,
-        sameSite: "none",
+        sameSite: "lax",
         maxAge:
           keepMeLoggedIn === true
             ? 7 * 24 * 60 * 60 * 1000
