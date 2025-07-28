@@ -30,7 +30,9 @@ function App() {
 
   const getUserInfo = async () => {
     const refreshToken = getCookie("refreshToken");
+    console.log("@@@1", refreshToken)
     if (refreshToken) {
+    console.log("@@@2", refreshToken)
       try {
         const tokenResponse = await axiosApi.post("/users/refresh_token");
         if (tokenResponse.data.token) {
