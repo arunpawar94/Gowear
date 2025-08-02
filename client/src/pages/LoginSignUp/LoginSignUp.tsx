@@ -26,6 +26,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../redux/store";
 import { setAccessToken } from "../../redux/tokenSlice";
 import { setUserInformationReducer } from "../../redux/userInfoSlice";
+import refreshAccessToken from "../../services/refreshAccessToken";
 
 const base_url = process.env.REACT_APP_API_URL;
 const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
@@ -287,6 +288,7 @@ export default function LoginSignUp() {
           role: responseUserData.role,
           profileImage: responseUserData.profileImage.imgUrl,
         };
+        refreshAccessToken(dispatch);
         dispatch(setAccessToken(response.data.data.token));
         dispatch(setUserInformationReducer(userInformation));
         setSuccessSnackbarMsg("Log in successfully!");
