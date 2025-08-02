@@ -414,7 +414,7 @@ const webStyle = {
   shadowText: {
     fontSize: "35px",
     color: "#000",
-    webkitTextStroke: `0.5px ${lightTextColor}`,
+    WebkitTextStroke: `0.5px ${lightTextColor}`,
   },
   bannerImageWrapper: {
     position: "relative",

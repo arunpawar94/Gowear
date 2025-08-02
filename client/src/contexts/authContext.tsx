@@ -1,11 +1,10 @@
-// context/AuthContext.tsx
 import React, { createContext, useContext, ReactNode } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  role: string | null; // "admin", "product_manager", etc.
+  role: string | null;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -15,7 +14,6 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
-// Wrap your App with this provider
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const accessToken = useSelector(
     (state: RootState) => state.tokenReducer.token

@@ -154,3 +154,16 @@ export const getUserInfo = async (req: Request, res: Response) => {
     res.status(401).json({ message: "error", error: "User not found" });
   }
 };
+
+export const logoutController = async (_req: Request, res: Response) => {
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+  });
+
+  res.status(200).json({
+    message: "success",
+    data: "User logged out successfully.",
+  });
+};

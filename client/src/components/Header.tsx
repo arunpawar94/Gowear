@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../redux/store";
-import { setAccessToken } from "../redux/tokenSlice";
-import { clearUserInformationReducer } from "../redux/userInfoSlice";
 import {
   Box,
   TextField,
@@ -23,6 +21,7 @@ import gowearLogoImage from "../assets/gowearLogoTransparent.png";
 import { primaryColor } from "../config/colors";
 import consfigJSON from "./config";
 import { useNavigate } from "react-router-dom";
+import logoutUser from "../services/logout";
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -64,12 +63,7 @@ const Header: React.FC = () => {
   };
 
   const handleLogout = () => {
-    dispatch(setAccessToken(null));
-    dispatch(clearUserInformationReducer());
-    document.cookie =
-      "refreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    handleMenuClose();
-    navigate("/");
+    logoutUser(dispatch, navigate, setAnchorEl);
   };
 
   return (
