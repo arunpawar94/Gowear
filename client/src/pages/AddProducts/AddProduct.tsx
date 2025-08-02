@@ -24,6 +24,8 @@ import { errorColor, lightTextColor, primaryColor } from "../../config/colors";
 import axios from "axios";
 import { SnackbarProvider, useSnackbar } from "notistack";
 import consfigJSON from "./config";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
 
 const base_url = process.env.REACT_APP_API_URL;
 
@@ -101,6 +103,10 @@ const AddProductFunction: React.FC = () => {
   const [tempSizeIndex, setTempSizeIndex] = useState<number[]>([]);
   const [addSizeQuantityError, setAddSizeQuantityError] = useState<string>("");
 
+  const accessToken = useSelector(
+    (state: RootState) => state.tokenReducer.token
+  );
+
   useEffect(() => {
     handleColorError();
     handleErrors();
@@ -151,6 +157,7 @@ const AddProductFunction: React.FC = () => {
       .post(`${base_url}/products/add_product`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
+          authorization: `Bearer ${accessToken}`
         },
       })
       .then((response) => {
