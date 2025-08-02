@@ -85,7 +85,7 @@ export const authenticateUser = async (
   authenticateExistingUser(loginCredential)
     .then((authResponse) => {
       response.cookie("refreshToken", authResponse.refreshToken, {
-        httpOnly: false,
+        httpOnly: true,
         secure: true,
         sameSite: "none",
         maxAge:

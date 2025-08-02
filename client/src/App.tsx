@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useAuth } from "./hooks/useAuth";
 import LoginSignUp from "./pages/LoginSignUp/LoginSignUp";
 import Home from "./pages/Home/Home";
 import AddProduct from "./pages/AddProducts/AddProduct";
@@ -10,53 +9,54 @@ import SnackbarMsg from "./components/SnackbarMsg";
 import ProtectedRoute from "./components/protectedRoute";
 import UnauthOnlyRoute from "./components/unauthOnlyRoute";
 import { useEffect } from "react";
-import { getCookie } from "./utils/manageCookies";
 import axiosApi from "./utils/axios";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "./redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "./redux/store";
 import { setAccessToken } from "./redux/tokenSlice";
 import axios from "axios";
 import { setUserInformationReducer } from "./redux/userInfoSlice";
 import UserList from "./pages/UsersList/UserList";
+import refreshAccessToken from "./services/refreshAccessToken";
 
 const base_url = process.env.REACT_APP_API_URL;
 
 function App() {
   const dispatch = useDispatch<AppDispatch>();
 
+  const intervalId = useSelector(
+    (state: RootState) => state.tokenReducer.intervalId
+  );
+
   useEffect(() => {
     getUserInfo();
+    return () => clearInterval(intervalId as ReturnType<typeof setInterval>);
   }, []);
 
   const getUserInfo = async () => {
-    const refreshToken = getCookie("refreshToken");
-    if (refreshToken) {
-      try {
-        const tokenResponse = await axiosApi.post("/users/refresh_token");
-        if (tokenResponse.data.token) {
-          const userInfo = await axios.get(`${base_url}/users/get_user_info`, {
-            headers: {
-              authorization: `Bearer ${tokenResponse.data.token}`,
-            },
-          });
-          const responseUserData = userInfo.data.data;
-          const userInformation = {
-            id: responseUserData._id,
-            email: responseUserData.email,
-            name: responseUserData.name,
-            role: responseUserData.role,
-            profileImage: responseUserData.profileImage.imgUrl,
-          };
-          dispatch(setAccessToken(tokenResponse.data.token));
-          dispatch(setUserInformationReducer(userInformation));
-        }
-      } catch (error) {
-        console.log("@@@@UserEorror", error);
+    try {
+      const tokenResponse = await axiosApi.post("/users/refresh_token");
+      if (tokenResponse.data.token) {
+        refreshAccessToken(dispatch);
+        const userInfo = await axios.get(`${base_url}/users/get_user_info`, {
+          headers: {
+            authorization: `Bearer ${tokenResponse.data.token}`,
+          },
+        });
+        const responseUserData = userInfo.data.data;
+        const userInformation = {
+          id: responseUserData._id,
+          email: responseUserData.email,
+          name: responseUserData.name,
+          role: responseUserData.role,
+          profileImage: responseUserData.profileImage.imgUrl,
+        };
+        dispatch(setAccessToken(tokenResponse.data.token));
+        dispatch(setUserInformationReducer(userInformation));
       }
+    } catch (error) {
+      console.log("@@@@UserEorror", error);
     }
   };
-
-  useAuth();
 
   return (
     <BrowserRouter>
