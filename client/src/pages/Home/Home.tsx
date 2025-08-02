@@ -31,6 +31,7 @@ import { bannerImage, gowearLogo } from "../../config/assets";
 import CartBox from "../../components/CartBox";
 import consfigJSON from "./config";
 import axios from "axios";
+import CartBoxSkeleton from "../../components/CartBoxSkeleton";
 
 const base_url = process.env.REACT_APP_API_URL;
 
@@ -57,6 +58,7 @@ const Home: React.FC = () => {
   const size1030 = useMediaQuery("(max-width:1030px)");
   const size930 = useMediaQuery("(max-width:930px)");
   const [products, setProducts] = useState<GetProductsResp[]>([]);
+  const [isProductsFetched, setIsProductsFetched] = useState<boolean>(false);
 
   const updateState = () => {
     dispatch(setSharedState(1));
@@ -76,9 +78,10 @@ const Home: React.FC = () => {
       .then((response) => {
         const shuffledData = shuffleArray(response.data.data);
         setProducts(shuffledData);
+        setIsProductsFetched(true);
       })
-      .catch((error) => {
-        console.error("Error fetching products:", error);
+      .catch((_error) => {
+        setIsProductsFetched(true);
       });
   };
 
@@ -141,13 +144,27 @@ const Home: React.FC = () => {
     return (
       <GridBox>
         <Grid container spacing={3}>
-          {products.map((item, index) => (
-            <Grid size={{ xs: 12, sm: 4, md: 3, lg: 2.4 }} key={index}>
-              <CartBox product={handleCartProductDetail(item)} />
-            </Grid>
-          ))}
+          {isProductsFetched ? (
+            <>
+              {products.map((item, index) => (
+                <Grid size={{ xs: 12, sm: 4, md: 3, lg: 2.4 }} key={index}>
+                  <CartBox product={handleCartProductDetail(item)} />
+                </Grid>
+              ))}
+            </>
+          ) : (
+            <>
+              {Array(10)
+                .fill(null)
+                .map((_item, index) => (
+                  <Grid size={{ xs: 12, sm: 4, md: 3, lg: 2.4 }} key={index}>
+                    <CartBoxSkeleton />
+                  </Grid>
+                ))}
+            </>
+          )}
         </Grid>
-        <AddButton>View More</AddButton>
+        {products.length > 0 && <AddButton>{consfigJSON.viewMore}</AddButton>}
       </GridBox>
     );
   };
