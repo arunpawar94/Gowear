@@ -1,6 +1,8 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/authContext";
+import { useSelector } from "react-redux";
+import { RootState } from "../redux/store";
 
 const ProtectedRoute = ({
   children,
@@ -10,8 +12,14 @@ const ProtectedRoute = ({
   allowedRoles: string[];
 }) => {
   const { isAuthenticated, role } = useAuth();
-  if (!isAuthenticated) return <Navigate to="/loginSignUp" />;
-  if (!allowedRoles.includes(role || "")) return <Navigate to="/" />;
+
+  const checkRefreshToken = useSelector(
+    (state: RootState) => state.tokenReducer.checkRefreshToken
+  );
+
+  if (!isAuthenticated && checkRefreshToken) return <Navigate to="/" />;
+  if (!allowedRoles.includes(role || "") && checkRefreshToken)
+    return <Navigate to="/" />;
   return children;
 };
 

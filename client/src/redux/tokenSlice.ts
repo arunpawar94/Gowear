@@ -3,11 +3,13 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 interface TokenInterface {
   token: string | null;
   intervalId: ReturnType<typeof setInterval> | null;
+  checkRefreshToken: boolean;
 }
 
 const initialState: TokenInterface = {
   token: null,
   intervalId: null,
+  checkRefreshToken: false,
 };
 
 const accessToken = createSlice({
@@ -23,8 +25,12 @@ const accessToken = createSlice({
     ) => {
       state.intervalId = action.payload;
     },
+    setCheckRefreshToken: (state, action: PayloadAction<boolean>) => {
+      state.checkRefreshToken = action.payload;
+    },
   },
 });
 
-export const { setAccessToken, setIntervalId } = accessToken.actions;
+export const { setAccessToken, setIntervalId, setCheckRefreshToken } =
+  accessToken.actions;
 export default accessToken.reducer;
