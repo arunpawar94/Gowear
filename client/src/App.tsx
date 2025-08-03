@@ -12,7 +12,7 @@ import { useEffect } from "react";
 import axiosApi from "./utils/axios";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "./redux/store";
-import { setAccessToken } from "./redux/tokenSlice";
+import { setAccessToken, setCheckRefreshToken } from "./redux/tokenSlice";
 import axios from "axios";
 import { setUserInformationReducer } from "./redux/userInfoSlice";
 import UserList from "./pages/UsersList/UserList";
@@ -52,9 +52,10 @@ function App() {
         };
         dispatch(setAccessToken(tokenResponse.data.token));
         dispatch(setUserInformationReducer(userInformation));
+        dispatch(setCheckRefreshToken(true));
       }
     } catch (error) {
-      console.log("@@@@UserEorror", error);
+      dispatch(setCheckRefreshToken(true));
     }
   };
 
