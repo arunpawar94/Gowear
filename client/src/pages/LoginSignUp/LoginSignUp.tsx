@@ -30,6 +30,7 @@ import refreshAccessToken from "../../services/refreshAccessToken";
 
 const base_url = process.env.REACT_APP_API_URL;
 const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+const app_base_url = process.env.REACT_APP_URL;
 
 const signInTexts = {
   activeHeading: configJSON.signIn,
@@ -128,7 +129,7 @@ export default function LoginSignUp() {
     if (action === "signIn") {
       localStorage.setItem("keepLoggedIn", keepLoggedIn.toString());
     }
-    const redirectUri = `http://localhost:3000/auth/${action}?provider=${provider}`;
+    const redirectUri = `${app_base_url}/auth/${action}?provider=${provider}`;
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid email profile`;
   };
 
