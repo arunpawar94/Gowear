@@ -65,7 +65,6 @@ export const googleLogin = async (req: Request, res: Response) => {
       const loginResponse = await authenticateExistingUser(loginCredential);
 
       res.cookie("refreshToken", loginResponse.refreshToken, {
-        // httpOnly: true,
         secure: true,
         sameSite: "strict",
         maxAge:
