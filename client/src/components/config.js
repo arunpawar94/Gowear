@@ -20,3 +20,4 @@ exports.products = "Products";
 exports.users = "Users";
 exports.orders = "Orders";
 exports.myWishlist = "My Wishlist";
+exports.cart = "Cart";

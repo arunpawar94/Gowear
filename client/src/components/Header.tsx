@@ -20,6 +20,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import ClearRoundedIcon from "@mui/icons-material/ClearRounded";
 import NavigateNextRoundedIcon from "@mui/icons-material/NavigateNextRounded";
+import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 
 import gowearImage from "../assets/gowearImageCrope.png";
 import gowearLogoImage from "../assets/gowearLogoTransparent.png";
@@ -43,6 +44,7 @@ const buttonArray = [
 ];
 
 function GradientCircularProgress() {
+  const size450 = useMediaQuery("(min-width:450px)");
   return (
     <React.Fragment>
       <svg width={0} height={0}>
@@ -54,7 +56,7 @@ function GradientCircularProgress() {
         </defs>
       </svg>
       <CircularProgress
-        size={25}
+        size={size450 ? 25 : 18}
         sx={{
           "svg circle": { stroke: "url(#my_gradient)" },
           margin: "1px auto",
@@ -120,12 +122,14 @@ const Header: React.FC = () => {
           style: {
             width: 250,
             borderRadius: "8px",
-            marginTop: size450 ? "64px" : "46px",
+            marginTop: size450 ? "64px" : "47px",
           },
         }}
         BackdropProps={{
           sx: {
-            top: size450 ? "63px" : "45px",
+            background: size450
+              ? `linear-gradient(to bottom, transparent 63px, rgba(0,0,0,0.5) 63px)`
+              : `linear-gradient(to bottom, transparent 46px, rgba(0,0,0,0.5) 46px)`,
           },
         }}
         variant="temporary"
@@ -162,14 +166,7 @@ const Header: React.FC = () => {
 
   return (
     <Box style={{ ...webStyle.mainBox }}>
-      <Box
-        style={{
-          ...webStyle.mainTopBox,
-          gap: size450 ? "25px" : "10px",
-          padding: size450 ? "10px" : "5px",
-        }}
-        onClick={() => setOpenDrawer(false)}
-      >
+      <Box sx={webStyle.mainTopBox} onClick={() => setOpenDrawer(false)}>
         <Box display={"flex"} gap={size450 ? "20px" : "10px"} width={"100%"}>
           {size450 ? (
             <img
@@ -211,32 +208,50 @@ const Header: React.FC = () => {
           </Box>
         </Box>
         {accessToken ? (
-          <>
-            <IconButton aria-label="cart" title="Go to Cart">
-              <Badge badgeContent={sharedState} sx={webStyle.badgeCountStyle}>
-                <ShoppingCartIcon style={{ color: primaryColor }} />
-              </Badge>
-            </IconButton>
+          <Box sx={webStyle.loginButtonMainBox}>
+            {size450 && (
+              <>
+                <IconButton aria-label="wishlist" title="Go to Wishlist">
+                  <Badge badgeContent={0} sx={webStyle.badgeCountStyle}>
+                    <FavoriteRoundedIcon sx={webStyle.wishCartIcon} />
+                  </Badge>
+                </IconButton>
+                <IconButton aria-label="cart" title="Go to Cart">
+                  <Badge
+                    badgeContent={sharedState}
+                    sx={webStyle.badgeCountStyle}
+                  >
+                    <ShoppingCartIcon sx={webStyle.wishCartIcon} />
+                  </Badge>
+                </IconButton>
+              </>
+            )}
             <Box style={webStyle.logInButtonBox}>
               <IconButton
-                style={webStyle.profileIconButton}
+                sx={webStyle.profileIconButton}
                 onClick={handleMenuOpen}
               >
                 <Avatar
-                  style={webStyle.profileAvatar}
+                  sx={webStyle.profileAvatar}
                   src={profileImage}
                   alt="user_image"
                 />
               </IconButton>
-              <Typography style={webStyle.logIn}>
-                {userInformation.name}
+              <Typography sx={webStyle.logIn}>
+                {userInformation.name.length > 10
+                  ? userInformation.name.split(" ")[0]
+                  : userInformation.name}
               </Typography>
             </Box>
-          </>
+          </Box>
         ) : (
           <Button
-            sx={size450 ? webStyle.signInButton : webStyle.signInButton450}
-            onClick={() => handleNavigation("loginSignUp")}
+            sx={webStyle.signInButton}
+            onClick={() => {
+              if (checkRefreshToken) {
+                handleNavigation("loginSignUp");
+              }
+            }}
           >
             {checkRefreshToken ? (
               <>{consfigJSON.logIn}</>
@@ -254,10 +269,31 @@ const Header: React.FC = () => {
             "aria-labelledby": "basic-button",
           }}
         >
-          <MenuItem onClick={handleMenuClose}>{consfigJSON.profile}</MenuItem>
-          <MenuItem onClick={handleMenuClose}>{consfigJSON.orders}</MenuItem>
-          <MenuItem onClick={handleMenuClose}>{consfigJSON.myWishlist}</MenuItem>
-          <MenuItem onClick={handleLogout}>{consfigJSON.logout}</MenuItem>
+          <MenuItem onClick={handleMenuClose} sx={webStyle.menuItemStyle}>
+            {consfigJSON.profile}
+          </MenuItem>
+          <MenuItem onClick={handleMenuClose} sx={webStyle.menuItemStyle}>
+            {consfigJSON.orders}
+          </MenuItem>
+          {!size450 && (
+            <>
+              <MenuItem onClick={handleMenuClose} sx={webStyle.menuItemStyle}>
+                <Box sx={webStyle.menuItemBox}>
+                  <Typography>{consfigJSON.myWishlist}</Typography>
+                  <span>2</span>
+                </Box>
+              </MenuItem>
+              <MenuItem onClick={handleMenuClose} sx={webStyle.menuItemStyle}>
+                <Box sx={webStyle.menuItemBox}>
+                  <Typography>{consfigJSON.cart}</Typography>
+                  <span>3</span>
+                </Box>
+              </MenuItem>
+            </>
+          )}
+          <MenuItem onClick={handleLogout} sx={webStyle.menuItemStyle}>
+            {consfigJSON.logout}
+          </MenuItem>
         </Menu>
       </Box>
       {size800 ? (
@@ -302,8 +338,14 @@ const webStyle = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    position: "relative",
-    zIndex: 1301,
+    gap: "25px",
+    padding: "10px",
+    "@media screen and (max-width: 600px)": {
+      gap: "10px",
+    },
+    "@media screen and (max-width: 450px)": {
+      padding: "5px",
+    },
   } as React.CSSProperties,
   mainBottomBox: {
     display: "flex",
@@ -344,10 +386,42 @@ const webStyle = {
     textTransform: "none",
     fontSize: "14px",
   } as React.CSSProperties,
+  loginButtonMainBox: {
+    display: "flex",
+    gap: "10px",
+    "@media screen and (max-width: 600px)": {
+      gap: "0px",
+    },
+  },
   badgeCountStyle: {
     "& .MuiBadge-badge": {
       backgroundColor: "#DC2626",
       color: "white",
+    },
+  },
+  menuItemStyle: {
+    color: primaryColor,
+  },
+  menuItemBox: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "20px",
+    alignItems: "center",
+    width: "100%",
+    "& span": {
+      background: "red",
+      color: "white",
+      borderRadius: "25px",
+      fontSize: "12px",
+      textAlign: "center",
+      width: "17px",
+      height: "17px",
+    },
+  },
+  wishCartIcon: {
+    color: primaryColor,
+    "@media screen and (max-width: 800px)": {
+      fontSize: "20px",
     },
   },
   logInButtonBox: {
@@ -357,17 +431,34 @@ const webStyle = {
   } as React.CSSProperties,
   profileIconButton: {
     padding: "5px",
+    "@media screen and (max-width: 450px)": {
+      padding: "2px",
+    },
   },
   profileAvatar: {
     color: primaryColor,
     width: "35px",
     height: "35px",
+    "@media screen and (max-width: 800px)": {
+      width: "24px",
+      height: "24px",
+    },
   },
   logIn: {
     fontSize: "10px",
     color: primaryColor,
     whiteSpace: "nowrap",
     marginTop: "-4px",
+    maxWidth: "54px",
+    textOverflow: "ellipsis",
+    overflow: "hidden",
+    "@media screen and (max-width: 800px)": {
+      fontSize: "8px",
+    },
+    "@media screen and (max-width: 450px)": {
+      lineHeight: "1",
+      marginTop: "-2px",
+    },
   },
   signInButton: {
     background: primaryColor,
@@ -375,13 +466,10 @@ const webStyle = {
     width: "100px",
     borderRadius: "8px",
     fontSize: "16px",
-  },
-  signInButton450: {
-    background: primaryColor,
-    color: "#fff",
-    width: "90px",
-    borderRadius: "8px",
-    fontSize: "12px",
+    "@media screen and (max-width: 450px)": {
+      width: "90px",
+      fontSize: "12px",
+    },
   },
   comLogoImage: {
     width: "120px",
