@@ -5,6 +5,8 @@ import {
   authenticateExistingUser,
 } from "../services/authService";
 
+type AdminVerificationType = "pending" | "approved" | "rejected";
+
 export const googleLogin = async (req: Request, res: Response) => {
   try {
     const { code, redirectUri } = req.body;
@@ -41,7 +43,8 @@ export const googleLogin = async (req: Request, res: Response) => {
         },
         dateOfBirth: "",
         emailVerified: true,
-        accountVerified: role === "user",
+        adminVerification:
+          role === "user" ? "approved" : ("pending" as AdminVerificationType),
       };
       const newUser = await createNewUser({
         ...rawData,

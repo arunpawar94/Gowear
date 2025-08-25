@@ -16,7 +16,7 @@ export interface UserInteface {
   methodToSignUpLogin: string;
   termsAndPolicies: boolean;
   emailVerified: boolean;
-  accountVerified: boolean;
+  adminVerification: "pending" | "approved" | "rejected";
 }
 
 interface SignInInterfaceBody {
@@ -109,7 +109,7 @@ export const authenticateExistingUser = async (
     throw error;
   }
 
-  if (user && user.role !== "user" && user.accountVerified === false) {
+  if (user && user.role !== "user" && user.adminVerification !== "approved") {
     const error = new Error("Account not approved by admin.");
     error.name = "NotApproved";
     throw error;

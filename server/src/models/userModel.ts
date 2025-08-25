@@ -1,6 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-// Define User Interface
 export interface IUser extends Document {
   name: string;
   email: string;
@@ -14,12 +13,11 @@ export interface IUser extends Document {
   methodToSignUpLogin: string;
   termsAndPolicies: boolean;
   emailVerified: boolean;
-  accountVerified: boolean;
+  adminVerification: "pending" | "approved" | "rejected";
   createdAt: Date;
   updatedAt: Date;
 }
 
-// Define Mongoose Schema
 const userSchema: Schema = new Schema(
   {
     name: { type: String, required: [true, "User name is required."] },
@@ -63,13 +61,17 @@ const userSchema: Schema = new Schema(
       type: Boolean,
       required: [true, "Email verification status is required"],
     },
-    accountVerified: {
-      type: Boolean,
+    adminVerification: {
+      type: String,
       required: [true, "Account verification status is required"],
+      enum: {
+        values: ["pending", "approved", "rejected"],
+        message:
+          "Admin verfication must be either 'pending', 'approved' or 'rejected'.",
+      },
     },
   },
   { timestamps: true }
 );
 
-// Export the User model
 export default mongoose.model<IUser>("User", userSchema);

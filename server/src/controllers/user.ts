@@ -7,6 +7,8 @@ import {
   authenticateExistingUser,
 } from "../services/authService";
 
+type AdminVerificationType = "pending" | "approved" | "rejected";
+
 export const getAllUsers = async (
   req: Request,
   res: Response
@@ -39,7 +41,8 @@ export const createUser = async (
       },
       dateOfBirth: "",
       emailVerified: false,
-      accountVerified: role === "user",
+      adminVerification:
+        role === "user" ? "approved" : ("pending" as AdminVerificationType),
     };
     const newUser = await createNewUser({
       ...rawData,
