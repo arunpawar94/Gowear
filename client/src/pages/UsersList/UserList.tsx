@@ -34,19 +34,33 @@ import {
 } from "../../config/colors";
 import consfigJSON from "./config";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { alpha, styled } from "@mui/material/styles";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import { visuallyHidden } from "@mui/utils";
+import axios from "axios";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
+
+const base_url = process.env.REACT_APP_API_URL;
 
 interface Data {
-  id: number;
+  id: string;
   name: string;
   email: string;
-  role: string;
-  emailVerification: string;
-  adminVerification: string;
+  role: "user" | "product_manager" | "admin";
+  emailVerified: boolean;
+  adminVerification: "pending" | "approved" | "rejected";
+}
+
+interface DataResponse {
+  _id: string;
+  name: string;
+  email: string;
+  role: "user" | "product_manager" | "admin";
+  emailVerified: boolean;
+  adminVerification: "pending" | "approved" | "rejected";
 }
 
 type OpenModal =
@@ -56,96 +70,6 @@ type OpenModal =
   | "confirmDelete"
   | null;
 type SelectedAdminStatus = "pending" | "approved" | "rejected" | null;
-
-function createData(
-  id: number,
-  name: string,
-  email: string,
-  role: string,
-  emailVerification: string,
-  adminVerification: string
-): Data {
-  return {
-    id,
-    name,
-    email,
-    role,
-    emailVerification,
-    adminVerification,
-  };
-}
-
-const rows = [
-  createData(1, "Cupcake", "test@yopmail.com", "admin", "pending", "pending"),
-  createData(2, "Donut", "test@yopmail.com", "admin", "verified", "pending"),
-  createData(
-    3,
-    "Eclair",
-    "test@yopmail.com",
-    "product_manager",
-    "pending",
-    "approved"
-  ),
-  createData(
-    4,
-    "Frozen yoghurt",
-    "test@yopmail.com",
-    "user",
-    "verified",
-    "rejected"
-  ),
-  createData(
-    5,
-    "Gingerbread",
-    "test@yopmail.com",
-    "product_manager",
-    "verified",
-    "approved"
-  ),
-  createData(
-    6,
-    "Honeycomb",
-    "test@yopmail.com",
-    "product_manager",
-    "verified",
-    "approved"
-  ),
-  createData(
-    7,
-    "Ice cream sandwich",
-    "test@yopmail.com",
-    "user",
-    "pending",
-    "approved"
-  ),
-  createData(
-    8,
-    "Jelly Bean",
-    "test@yopmail.com",
-    "user",
-    "verified",
-    "rejected"
-  ),
-  createData(9, "KitKat", "test@yopmail.com", "user", "pending", "rejected"),
-  createData(10, "Lollipop", "test@yopmail.com", "user", "pending", "pending"),
-  createData(
-    11,
-    "Marshmallow",
-    "test@yopmail.com",
-    "admin",
-    "verified",
-    "pending"
-  ),
-  createData(12, "Nougat", "test@yopmail.com", "user", "verified", "approved"),
-  createData(
-    13,
-    "Oreo",
-    "test@yopmail.com",
-    "product_manager",
-    "pending",
-    "approved"
-  ),
-];
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -163,8 +87,8 @@ function getComparator<Key extends keyof any>(
   order: Order,
   orderBy: Key
 ): (
-  a: { [key in Key]: number | string },
-  b: { [key in Key]: number | string }
+  a: { [key in Key]: number | string | boolean },
+  b: { [key in Key]: number | string | boolean }
 ) => number {
   return order === "desc"
     ? (a, b) => descendingComparator(a, b, orderBy)
@@ -198,7 +122,7 @@ const headCells: readonly HeadCell[] = [
     label: "Role",
   },
   {
-    id: "emailVerification",
+    id: "emailVerified",
     numeric: false,
     disablePadding: false,
     label: "Email Verification",
@@ -309,9 +233,11 @@ interface EnhancedTableToolbarProps {
 export default function UserList() {
   const [order, setOrder] = useState<Order>("asc");
   const [orderBy, setOrderBy] = useState<keyof Data>("name");
-  const [selected, setSelected] = useState<readonly number[]>([]);
-  const [page, setPage] = useState(0);
+  const [selected, setSelected] = useState<readonly string[]>([]);
+  const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [showModal, setShowModal] = useState<OpenModal>(null);
   const [selectAdminStatus, setSelectAdminStatus] =
     useState<SelectedAdminStatus>(null);
@@ -325,6 +251,52 @@ export default function UserList() {
   const [modalHeadingText, setModalHeadingText] = useState<string | null>(null);
   const [filterValues, setFilterValues] =
     useState<FilterData>(initialFilterData);
+  const [userList, setUserList] = useState<Data[]>([]);
+
+  const { token: accessToken, checkRefreshToken } = useSelector(
+    (state: RootState) => state.tokenReducer
+  );
+
+  useEffect(() => {
+    if (checkRefreshToken === true) {
+      getUsersList();
+    }
+  }, [checkRefreshToken, filterValues, page, rowsPerPage]);
+
+  const getUsersList = async () => {
+    const roles =
+      filterValues.role.length > 0 ? filterValues.role.join(", ") : undefined;
+    let emailVerified = undefined;
+    if (filterValues.emailVerification.length > 0) {
+      emailVerified =
+        filterValues.emailVerification[0] === "pending" ? false : true;
+    }
+    const adminVerification =
+      filterValues.adminVerification.length > 0
+        ? filterValues.adminVerification.join(", ")
+        : undefined;
+    const params = {
+      page,
+      per_page: rowsPerPage,
+      role: roles,
+      emailVerified,
+      adminVerification,
+    };
+    try {
+      const response = await axios.get(`${base_url}/users/show_users`, {
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+        params: params,
+      });
+      const updateData = response.data.data.map((item: DataResponse) => {
+        return { ...item, id: item._id };
+      });
+      setUserList(updateData);
+      setTotalPages(response.data.meta.total_pages);
+      setTotalUsers(response.data.meta.total);
+    } catch (error) {}
+  };
 
   const handleRequestSort = (
     _event: React.MouseEvent<unknown>,
@@ -337,16 +309,16 @@ export default function UserList() {
 
   const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
-      const newSelected = rows.map((n) => n.id);
+      const newSelected = userList.map((n) => n.id);
       setSelected(newSelected);
       return;
     }
     setSelected([]);
   };
 
-  const handleClick = (_event: React.MouseEvent<unknown>, id: number) => {
+  const handleClick = (_event: React.MouseEvent<unknown>, id: string) => {
     const selectedIndex = selected.indexOf(id);
-    let newSelected: readonly number[] = [];
+    let newSelected: readonly string[] = [];
 
     if (selectedIndex === -1) {
       newSelected = newSelected.concat(selected, id);
@@ -364,26 +336,19 @@ export default function UserList() {
   };
 
   const handleChangePage = (_event: unknown, newPage: number) => {
-    setPage(newPage);
+    setPage(newPage + 1);
   };
 
   const handleChangeRowsPerPage = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    setPage(1);
   };
 
-  // Avoid a layout jump when reaching the last page with empty rows.
-  const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
-
   const visibleRows = useMemo(
-    () =>
-      [...rows]
-        .sort(getComparator(order, orderBy))
-        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
-    [order, orderBy, page, rowsPerPage]
+    () => [...userList].sort(getComparator(order, orderBy)),
+    [order, orderBy, userList]
   );
 
   const handleStatusColor = (value: string) => {
@@ -423,7 +388,7 @@ export default function UserList() {
         setSnackbarErrorMessage("Admin approve is not required for user!");
         return;
       }
-      if (selectedRowData.emailVerification === "pending") {
+      if (selectedRowData.emailVerified === false) {
         setSnackbarErrorMessage("Email is not verified yet!");
         return;
       }
@@ -453,8 +418,19 @@ export default function UserList() {
   };
 
   const handleSelectChange = (event: SelectChangeEvent<string[]>) => {
-    const newValue = event.target.value;
+    let newValue = event.target.value;
     const name = event.target.name;
+    const prevEmailFilter = filterValues.emailVerification;
+    if (
+      name === "emailVerification" &&
+      newValue.length === 2 &&
+      prevEmailFilter.length === 1 &&
+      Array.isArray(newValue)
+    ) {
+      newValue = prevEmailFilter.map((item) =>
+        item === "pending" ? "verified" : "pending"
+      );
+    }
     setFilterValues((prevState) => ({
       ...prevState,
       [name]: newValue,
@@ -475,13 +451,13 @@ export default function UserList() {
   };
 
   const handleApproveIconClick = () => {
-    const newArray = rows.filter((item) => selected.includes(item.id));
+    const newArray = userList.filter((item) => selected.includes(item.id));
     if (newArray.length === 1) {
       handleAdminVeificationClick(null, newArray[0]);
       return;
     }
     const check = newArray.some(
-      (item) => item.role === "user" || item.emailVerification === "pending"
+      (item) => item.role === "user" || item.emailVerified === false
     );
     if (check) {
       setSnackbarErrorMessage(
@@ -659,7 +635,7 @@ export default function UserList() {
               orderBy={orderBy}
               onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
-              rowCount={rows.length}
+              rowCount={userList.length}
             />
             <TableBody>
               {visibleRows.map((row, index) => {
@@ -691,6 +667,7 @@ export default function UserList() {
                       id={labelId}
                       scope="row"
                       padding="none"
+                      style={webStyle.ellipseText}
                     >
                       {row.name}
                     </TableCell>
@@ -708,10 +685,12 @@ export default function UserList() {
                       style={{
                         textTransform: "capitalize",
                         fontWeight: "bold",
-                        color: handleStatusColor(row.emailVerification),
+                        color: handleStatusColor(
+                          row.emailVerified ? "verified" : "pending"
+                        ),
                       }}
                     >
-                      {row.emailVerification}
+                      {row.emailVerified ? "verified" : "pending"}
                     </TableCell>
                     <TableCell
                       align="left"
@@ -743,24 +722,15 @@ export default function UserList() {
                   </TableRow>
                 );
               })}
-              {emptyRows > 0 && (
-                <TableRow
-                  style={{
-                    height: 53 * emptyRows,
-                  }}
-                >
-                  <TableCell colSpan={6} />
-                </TableRow>
-              )}
             </TableBody>
           </Table>
         </TableContainer>
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={rows.length}
+          count={totalUsers}
           rowsPerPage={rowsPerPage}
-          page={page}
+          page={page - 1}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
@@ -957,6 +927,12 @@ const webStyle = {
     "& .MuiTableCell-root": {
       fontSize: "16px",
     },
+  },
+  ellipseText: {
+    maxWidth: "100px",
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
   },
   buttonStyle: {
     background: primaryColor,

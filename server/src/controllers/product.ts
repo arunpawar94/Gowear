@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Product, { IProduct } from "../models/productModel";
 import cloudinary from "../config/cloudinaryConfig";
+import isNaturalNumberString from "../utils/checkIsNaturalNumberString";
 
 interface ProductFilter {
   categorie?: { $regex: RegExp };
@@ -191,8 +192,3 @@ export const getProducts = async (req: Request, res: Response) => {
     res.status(400).json({ message: "error", error: error });
   }
 };
-
-function isNaturalNumberString(value: string): boolean {
-  const num = Number(value);
-  return /^\d+$/.test(value) && Number.isInteger(num) && num > 0;
-}
