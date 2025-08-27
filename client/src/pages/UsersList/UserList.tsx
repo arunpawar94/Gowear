@@ -43,6 +43,7 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import GradientCircularProgress from "../../components/GradientCircularProgress";
+import { useSnackbar } from "notistack";
 
 const base_url = process.env.REACT_APP_API_URL;
 
@@ -256,6 +257,7 @@ export default function UserList() {
     useState<FilterData>(initialFilterData);
   const [userList, setUserList] = useState<Data[]>([]);
   const [loading, setLoading] = useState(true);
+  const { enqueueSnackbar } = useSnackbar();
 
   const { token: accessToken, checkRefreshToken } = useSelector(
     (state: RootState) => state.tokenReducer
@@ -301,6 +303,18 @@ export default function UserList() {
       setLoading(false);
     } catch (_error) {
       setLoading(false);
+      enqueueSnackbar("Unable to fetch user list.", {
+        variant: "error",
+        autoHideDuration: 3000,
+      });
+      setTimeout(
+        () =>
+          enqueueSnackbar("Something went wrong!", {
+            variant: "error",
+            autoHideDuration: 3000,
+          }),
+        500
+      );
     }
   };
 
