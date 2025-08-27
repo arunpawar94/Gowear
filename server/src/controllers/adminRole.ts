@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 import Users from "../models/userModel";
 import isNaturalNumberString from "../utils/checkIsNaturalNumberString";
+import checkValidValue from "../utils/checkValidValue";
+import userModel from "../models/userModel";
+import mongoose from "mongoose";
 
 interface UsersFilter {
   role?: { $in: RegExp[] };
@@ -65,4 +68,63 @@ export const showUsers = async (requiest: Request, response: Response) => {
   } catch (error) {
     response.status(400).json({ message: "error", error: error });
   }
+};
+
+export const updateAdminStatus = async (
+  requiest: Request,
+  response: Response
+) => {
+  const { userIds, status: statusToChange } = requiest.body;
+  const isValidStatus = checkValidValue(
+    [statusToChange],
+    ["pending", "approved", "rejected"]
+  );
+  if (!isValidStatus) {
+    response.status(400).json({
+      message: "error",
+      error: "Invalid status value.",
+    });
+    return;
+  }
+  try {
+    if (typeof userIds === "string") {
+      if (!mongoose.Types.ObjectId.isValid(userIds)) {
+        response
+          .status(400)
+          .json({ message: "error", error: "Invalid userId format" });
+        return;
+      }
+      const user = await userModel.findByIdAndUpdate(
+        userIds,
+        { $set: { adminVerification: statusToChange } },
+        { new: true }
+      );
+      if (!user) {
+        response
+          .status(404)
+          .json({ message: "error", error: "User not exist." });
+        return;
+      }
+
+      response.status(200).json({
+        message: "success",
+        data: "Admin status updated successfully",
+      });
+      return;
+    }
+  } catch (_errors) {
+    response.status(500).json({
+      message: "error",
+      error: "Server error, Unable to update status.",
+    });
+    return;
+  }
+
+  // if (Array.isArray(userIds)) {
+  // }
+  // response.status(200).json({
+  //   message: "success",
+  //   data: requiest.body,
+  //   meta: typeof userIds === "string",
+  // });
 };

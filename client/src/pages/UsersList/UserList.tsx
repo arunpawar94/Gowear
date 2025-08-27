@@ -39,7 +39,7 @@ import { alpha, styled } from "@mui/material/styles";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import { visuallyHidden } from "@mui/utils";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import GradientCircularProgress from "../../components/GradientCircularProgress";
@@ -289,7 +289,7 @@ export default function UserList() {
       adminVerification,
     };
     try {
-      const response = await axios.get(`${base_url}/users/show_users`, {
+      const response = await axios.get(`${base_url}/admin/show_users`, {
         headers: {
           authorization: `Bearer ${accessToken}`,
         },
@@ -301,20 +301,34 @@ export default function UserList() {
       setUserList(updateData);
       setTotalUsers(response.data.meta.total);
       setLoading(false);
-    } catch (_error) {
+    } catch (error) {
       setLoading(false);
-      enqueueSnackbar("Unable to fetch user list.", {
-        variant: "error",
-        autoHideDuration: 3000,
-      });
-      setTimeout(
-        () =>
+      setUserList([]);
+      if (axios.isAxiosError(error) && error.response) {
+        if (typeof error.response.data.error === "string") {
+          if (error.response.data.error === "Route not found.") {
+            enqueueSnackbar("Invalid route, unable to get user list.", {
+              variant: "error",
+              autoHideDuration: 3000,
+            });
+          } else {
+            enqueueSnackbar(error.response.data.error, {
+              variant: "error",
+              autoHideDuration: 3000,
+            });
+          }
+        } else {
           enqueueSnackbar("Something went wrong!", {
             variant: "error",
             autoHideDuration: 3000,
-          }),
-        500
-      );
+          });
+        }
+      } else {
+        enqueueSnackbar("Something went wrong!", {
+          variant: "error",
+          autoHideDuration: 3000,
+        });
+      }
     }
   };
 
