@@ -10,3 +10,4 @@ exports.reject = "reject";
 exports.filter = "Filter";
 exports.selected = "selected";
 exports.deleteConfirmMsg = "Please confirm to delete selected account.";
+exports.noResultFound = "No Result Found...";
