@@ -13,7 +13,6 @@ import {
   Button,
   Menu,
   MenuItem,
-  CircularProgress,
   Drawer,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
@@ -24,14 +23,11 @@ import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 
 import gowearImage from "../assets/gowearImageCrope.png";
 import gowearLogoImage from "../assets/gowearLogoTransparent.png";
-import {
-  extraLightPrimaryColor,
-  primaryColor,
-  lightTextColor,
-} from "../config/colors";
+import { extraLightPrimaryColor, primaryColor } from "../config/colors";
 import consfigJSON from "./config";
 import { useNavigate } from "react-router-dom";
 import logoutUser from "../services/logout";
+import GradientCircularProgress from "./GradientCircularProgress";
 
 const buttonArray = [
   { label: "Home", address: "" },
@@ -42,29 +38,6 @@ const buttonArray = [
   { label: "Products", address: "addProduct" },
   { label: "Users", address: "showUserlist" },
 ];
-
-function GradientCircularProgress() {
-  const size450 = useMediaQuery("(min-width:450px)");
-  return (
-    <React.Fragment>
-      <svg width={0} height={0}>
-        <defs>
-          <linearGradient id="my_gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={lightTextColor} />
-            <stop offset="100%" stopColor={primaryColor} />
-          </linearGradient>
-        </defs>
-      </svg>
-      <CircularProgress
-        size={size450 ? 25 : 18}
-        sx={{
-          "svg circle": { stroke: "url(#my_gradient)" },
-          margin: "1px auto",
-        }}
-      />
-    </React.Fragment>
-  );
-}
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -256,7 +229,7 @@ const Header: React.FC = () => {
             {checkRefreshToken ? (
               <>{consfigJSON.logIn}</>
             ) : (
-              <GradientCircularProgress />
+              <GradientCircularProgress size={25} margin="1px auto" />
             )}
           </Button>
         )}

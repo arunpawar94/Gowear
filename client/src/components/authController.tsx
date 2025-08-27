@@ -1,33 +1,16 @@
 import React, { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Box, Modal, Typography, CircularProgress } from "@mui/material";
+import { Box, Modal, Typography } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../redux/store";
 import { setSuccessMsg, setErrorMsg } from "../redux/snackbarMsgsSlice";
 import { setAccessToken } from "../redux/tokenSlice";
 import { setUserInformationReducer } from "../redux/userInfoSlice";
-import { lightTextColor, primaryColor } from "../config/colors";
+import { primaryColor } from "../config/colors";
+import GradientCircularProgress from "./GradientCircularProgress";
 
 const base_url = process.env.REACT_APP_API_URL;
-
-function GradientCircularProgress() {
-  return (
-    <React.Fragment>
-      <svg width={0} height={0}>
-        <defs>
-          <linearGradient id="my_gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={lightTextColor} />
-            <stop offset="100%" stopColor={primaryColor} />
-          </linearGradient>
-        </defs>
-      </svg>
-      <CircularProgress
-        sx={{ "svg circle": { stroke: "url(#my_gradient)" } }}
-      />
-    </React.Fragment>
-  );
-}
 
 export const AuthCallback = () => {
   const location = useLocation();
@@ -53,14 +36,16 @@ export const AuthCallback = () => {
         keepMeLoggedIn: keepLoggedIn,
         methodToSignUpLogin: providerName,
         code,
-        redirectUri: window.location.origin + `/auth/signIn?provider=${providerName}`,
+        redirectUri:
+          window.location.origin + `/auth/signIn?provider=${providerName}`,
       };
       const signUpData = {
         role: userRole,
         methodToSignUpLogin: providerName,
         termsAndPolicies: true,
         code,
-        redirectUri: window.location.origin + `/auth/signUp?provider=${providerName}`,
+        redirectUri:
+          window.location.origin + `/auth/signUp?provider=${providerName}`,
       };
       const bodyData = action === "signUp" ? signUpData : signInData;
       axios
@@ -133,7 +118,7 @@ export const AuthCallback = () => {
     <Box style={webStyle.mainBox}>
       <Modal open={true}>
         <Box style={webStyle.modalBox}>
-          <GradientCircularProgress />
+          <GradientCircularProgress size={50} margin="10px" />
           <br />
           <Typography style={webStyle.textStyle}>Authenticating...</Typography>
         </Box>

@@ -22,7 +22,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import AddCircleOutlineRoundedIcon from "@mui/icons-material/AddCircleOutlineRounded";
 import { errorColor, lightTextColor, primaryColor } from "../../config/colors";
 import axios from "axios";
-import { SnackbarProvider, useSnackbar } from "notistack";
+import { useSnackbar } from "notistack";
 import consfigJSON from "./config";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
@@ -82,7 +82,7 @@ const initialColorItem = {
   ],
 };
 
-const AddProductFunction: React.FC = () => {
+const AddProduct: React.FC = () => {
   const { enqueueSnackbar } = useSnackbar();
   const [productName, setProductName] = useState("");
   const [description, setDescription] = useState("");
@@ -157,7 +157,7 @@ const AddProductFunction: React.FC = () => {
       .post(`${base_url}/products/add_product`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
-          authorization: `Bearer ${accessToken}`
+          authorization: `Bearer ${accessToken}`,
         },
       })
       .then((response) => {
@@ -983,17 +983,6 @@ const AddProductFunction: React.FC = () => {
         </Box>
       </Modal>
     </Box>
-  );
-};
-
-const AddProduct = () => {
-  return (
-    <SnackbarProvider
-      maxSnack={8}
-      anchorOrigin={{ vertical: "top", horizontal: "right" }}
-    >
-      <AddProductFunction />
-    </SnackbarProvider>
   );
 };
 

@@ -17,6 +17,7 @@ import axios from "axios";
 import { setUserInformationReducer } from "./redux/userInfoSlice";
 import UserList from "./pages/UsersList/UserList";
 import refreshAccessToken from "./services/refreshAccessToken";
+import { SnackbarProvider } from "notistack";
 
 const base_url = process.env.REACT_APP_API_URL;
 
@@ -61,52 +62,57 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Header />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route
-          path="/loginSignUp"
-          element={
-            <UnauthOnlyRoute>
-              <LoginSignUp />
-            </UnauthOnlyRoute>
-          }
-        />
-        <Route
-          path="/addProduct"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "product_manager"]}>
-              <AddProduct />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/auth/signUp"
-          element={
-            <UnauthOnlyRoute>
-              <AuthCallback />
-            </UnauthOnlyRoute>
-          }
-        />
-        <Route
-          path="/auth/signIn"
-          element={
-            <UnauthOnlyRoute>
-              <AuthCallback />
-            </UnauthOnlyRoute>
-          }
-        />
-        <Route
-          path="/showUserList"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <UserList />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-      <Footer />
-      <SnackbarMsg />
+      <SnackbarProvider
+        maxSnack={8}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Header />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route
+            path="/loginSignUp"
+            element={
+              <UnauthOnlyRoute>
+                <LoginSignUp />
+              </UnauthOnlyRoute>
+            }
+          />
+          <Route
+            path="/addProduct"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "product_manager"]}>
+                <AddProduct />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/auth/signUp"
+            element={
+              <UnauthOnlyRoute>
+                <AuthCallback />
+              </UnauthOnlyRoute>
+            }
+          />
+          <Route
+            path="/auth/signIn"
+            element={
+              <UnauthOnlyRoute>
+                <AuthCallback />
+              </UnauthOnlyRoute>
+            }
+          />
+          <Route
+            path="/showUserList"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <UserList />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+        <Footer />
+        <SnackbarMsg />
+      </SnackbarProvider>
     </BrowserRouter>
   );
 }

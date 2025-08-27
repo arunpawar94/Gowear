@@ -42,6 +42,8 @@ import { visuallyHidden } from "@mui/utils";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import GradientCircularProgress from "../../components/GradientCircularProgress";
+import { useSnackbar } from "notistack";
 
 const base_url = process.env.REACT_APP_API_URL;
 
@@ -145,6 +147,7 @@ interface EnhancedTableProps {
   order: Order;
   orderBy: string;
   rowCount: number;
+  loading: boolean;
 }
 
 interface FilterData {
@@ -178,6 +181,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
     numSelected,
     rowCount,
     onRequestSort,
+    loading,
   } = props;
   const createSortHandler =
     (property: keyof Data) => (event: React.MouseEvent<unknown>) => {
@@ -193,6 +197,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
             indeterminate={numSelected > 0 && numSelected < rowCount}
             checked={rowCount > 0 && numSelected === rowCount}
             onChange={onSelectAllClick}
+            disabled={loading}
             inputProps={{
               "aria-label": "User",
             }}
@@ -236,7 +241,6 @@ export default function UserList() {
   const [selected, setSelected] = useState<readonly string[]>([]);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
   const [showModal, setShowModal] = useState<OpenModal>(null);
   const [selectAdminStatus, setSelectAdminStatus] =
@@ -252,6 +256,8 @@ export default function UserList() {
   const [filterValues, setFilterValues] =
     useState<FilterData>(initialFilterData);
   const [userList, setUserList] = useState<Data[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { enqueueSnackbar } = useSnackbar();
 
   const { token: accessToken, checkRefreshToken } = useSelector(
     (state: RootState) => state.tokenReducer
@@ -293,9 +299,23 @@ export default function UserList() {
         return { ...item, id: item._id };
       });
       setUserList(updateData);
-      setTotalPages(response.data.meta.total_pages);
       setTotalUsers(response.data.meta.total);
-    } catch (error) {}
+      setLoading(false);
+    } catch (_error) {
+      setLoading(false);
+      enqueueSnackbar("Unable to fetch user list.", {
+        variant: "error",
+        autoHideDuration: 3000,
+      });
+      setTimeout(
+        () =>
+          enqueueSnackbar("Something went wrong!", {
+            variant: "error",
+            autoHideDuration: 3000,
+          }),
+        500
+      );
+    }
   };
 
   const handleRequestSort = (
@@ -602,6 +622,7 @@ export default function UserList() {
           MenuProps={MenuProps}
           displayEmpty
           sx={webStyle.selectStyle}
+          disabled={loading}
         >
           {options.map((item) => (
             <MenuItem key={item} value={item} sx={webStyle.selectOptionStyle}>
@@ -636,104 +657,138 @@ export default function UserList() {
               onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
               rowCount={userList.length}
+              loading={loading}
             />
-            <TableBody>
-              {visibleRows.map((row, index) => {
-                const isItemSelected = selected.includes(row.id);
-                const labelId = `enhanced-table-checkbox-${index}`;
-                return (
-                  <TableRow
-                    hover
-                    role="checkbox"
-                    aria-checked={isItemSelected}
-                    tabIndex={-1}
-                    key={row.id}
-                    selected={isItemSelected}
-                    sx={{ ...webStyle.tableBodyRowStyle, cursor: "pointer" }}
-                    onClick={(event) => handleClick(event, row.id)}
+            {loading ? (
+              <TableBody>
+                <TableRow>
+                  <TableCell
+                    colSpan={7}
+                    sx={{ textAlign: "center" }}
+                    height={250}
                   >
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        color="primary"
-                        checked={isItemSelected}
-                        inputProps={{
-                          "aria-labelledby": labelId,
-                        }}
-                        sx={webStyle.checkBoxCheckedColor}
-                      />
-                    </TableCell>
+                    <GradientCircularProgress size={50} margin="10px" />
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            ) : (
+              <TableBody>
+                {visibleRows.length === 0 ? (
+                  <TableRow>
                     <TableCell
-                      component="th"
-                      id={labelId}
-                      scope="row"
-                      padding="none"
-                      style={webStyle.ellipseText}
+                      colSpan={7}
+                      sx={{ textAlign: "center" }}
+                      height={250}
                     >
-                      {row.name}
-                    </TableCell>
-                    <TableCell align="left">{row.email}</TableCell>
-                    <TableCell
-                      align="left"
-                      style={{ textTransform: "capitalize" }}
-                    >
-                      {row.role === "product_manager"
-                        ? "Product Manager"
-                        : row.role}
-                    </TableCell>
-                    <TableCell
-                      align="left"
-                      style={{
-                        textTransform: "capitalize",
-                        fontWeight: "bold",
-                        color: handleStatusColor(
-                          row.emailVerified ? "verified" : "pending"
-                        ),
-                      }}
-                    >
-                      {row.emailVerified ? "verified" : "pending"}
-                    </TableCell>
-                    <TableCell
-                      align="left"
-                      style={{
-                        textTransform: "capitalize",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      <Button
-                        sx={{
-                          ...webStyle.buttonStyle,
-                          backgroundColor: handleStatusColor(
-                            row.adminVerification
-                          ),
-                          width: "100px",
-                        }}
-                        onClick={(event) =>
-                          handleAdminVeificationClick(event, row)
-                        }
-                      >
-                        {row.adminVerification}
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      <Button sx={webStyle.buttonStyle}>
-                        {consfigJSON.view}
-                      </Button>
+                      <Typography>{consfigJSON.noResultFound}</Typography>
                     </TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
+                ) : (
+                  <>
+                    {visibleRows.map((row, index) => {
+                      const isItemSelected = selected.includes(row.id);
+                      const labelId = `enhanced-table-checkbox-${index}`;
+                      return (
+                        <TableRow
+                          hover
+                          role="checkbox"
+                          aria-checked={isItemSelected}
+                          tabIndex={-1}
+                          key={row.id}
+                          selected={isItemSelected}
+                          sx={{
+                            ...webStyle.tableBodyRowStyle,
+                            cursor: "pointer",
+                          }}
+                          onClick={(event) => handleClick(event, row.id)}
+                        >
+                          <TableCell padding="checkbox">
+                            <Checkbox
+                              color="primary"
+                              checked={isItemSelected}
+                              inputProps={{
+                                "aria-labelledby": labelId,
+                              }}
+                              sx={webStyle.checkBoxCheckedColor}
+                            />
+                          </TableCell>
+                          <TableCell
+                            component="th"
+                            id={labelId}
+                            scope="row"
+                            padding="none"
+                            style={webStyle.ellipseText}
+                          >
+                            {row.name}
+                          </TableCell>
+                          <TableCell align="left">{row.email}</TableCell>
+                          <TableCell
+                            align="left"
+                            style={{ textTransform: "capitalize" }}
+                          >
+                            {row.role === "product_manager"
+                              ? "Product Manager"
+                              : row.role}
+                          </TableCell>
+                          <TableCell
+                            align="left"
+                            style={{
+                              textTransform: "capitalize",
+                              fontWeight: "bold",
+                              color: handleStatusColor(
+                                row.emailVerified ? "verified" : "pending"
+                              ),
+                            }}
+                          >
+                            {row.emailVerified ? "verified" : "pending"}
+                          </TableCell>
+                          <TableCell
+                            align="left"
+                            style={{
+                              textTransform: "capitalize",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            <Button
+                              sx={{
+                                ...webStyle.buttonStyle,
+                                backgroundColor: handleStatusColor(
+                                  row.adminVerification
+                                ),
+                                width: "100px",
+                              }}
+                              onClick={(event) =>
+                                handleAdminVeificationClick(event, row)
+                              }
+                            >
+                              {row.adminVerification}
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            <Button sx={webStyle.buttonStyle}>
+                              {consfigJSON.view}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </>
+                )}
+              </TableBody>
+            )}
           </Table>
         </TableContainer>
-        <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
-          component="div"
-          count={totalUsers}
-          rowsPerPage={rowsPerPage}
-          page={page - 1}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
+        {!loading && (
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={totalUsers}
+            rowsPerPage={rowsPerPage}
+            page={page - 1}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
+        )}
       </Paper>
       <Modal open={Boolean(showModal)} onClose={handleModalClose}>
         <Box style={webStyle.progressBox}>
