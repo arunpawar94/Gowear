@@ -96,7 +96,10 @@ export const authenticateExistingUser = async (
   }
 
   if (user && user.methodToSignUpLogin === "email") {
-    if (user.password !== loginCredential.password) {
+    const isMatch = await user.comparePassword(
+      loginCredential.password as string
+    );
+    if (!isMatch) {
       const error = new Error("Invalid credentials");
       error.name = "InvalidCredentials";
       throw error;
