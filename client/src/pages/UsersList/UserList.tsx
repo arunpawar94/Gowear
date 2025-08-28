@@ -44,6 +44,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import GradientCircularProgress from "../../components/GradientCircularProgress";
 import { useSnackbar } from "notistack";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 
 const base_url = process.env.REACT_APP_API_URL;
 
@@ -156,10 +157,22 @@ interface FilterData {
   adminVerification: ("pending" | "approved" | "rejected")[];
 }
 
+interface SuccessModalMeta {
+  totalCount: number;
+  totalChange: number;
+  totalSkiped: number;
+}
+
 const initialFilterData = {
   role: [],
   emailVerification: [],
   adminVerification: [],
+};
+
+const initialSuccessModalMeta = {
+  totalCount: 0,
+  totalChange: 0,
+  totalSkiped: 0,
 };
 
 const ITEM_HEIGHT = 48;
@@ -187,7 +200,6 @@ function EnhancedTableHead(props: EnhancedTableProps) {
     (property: keyof Data) => (event: React.MouseEvent<unknown>) => {
       onRequestSort(event, property);
     };
-
   return (
     <TableHead>
       <TableRow sx={{ background: lightTextColor }}>
@@ -253,6 +265,12 @@ export default function UserList() {
     string | null
   >(null);
   const [modalHeadingText, setModalHeadingText] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState<
+    "forStatus" | "forDelete" | null
+  >(null);
+  const [successModalMeta, setSuccessModalMeta] = useState<SuccessModalMeta>(
+    initialSuccessModalMeta
+  );
   const [filterValues, setFilterValues] =
     useState<FilterData>(initialFilterData);
   const [userList, setUserList] = useState<Data[]>([]);
@@ -261,6 +279,10 @@ export default function UserList() {
 
   const { token: accessToken, checkRefreshToken } = useSelector(
     (state: RootState) => state.tokenReducer
+  );
+
+  const adminUserId = useSelector(
+    (state: RootState) => state.userInfoReducer.id
   );
 
   useEffect(() => {
@@ -289,32 +311,173 @@ export default function UserList() {
       adminVerification,
     };
     try {
-      const response = await axios.get(`${base_url}/users/show_users`, {
+      const response = await axios.get(`${base_url}/admin/show_users`, {
         headers: {
           authorization: `Bearer ${accessToken}`,
         },
         params: params,
       });
-      const updateData = response.data.data.map((item: DataResponse) => {
-        return { ...item, id: item._id };
-      });
-      setUserList(updateData);
-      setTotalUsers(response.data.meta.total);
+      const getData = response.data;
+      if (getData.data.length === 0) {
+        if (
+          getData.meta.total > 0 &&
+          getData.meta.page > getData.meta.total_pages
+        ) {
+          setPage(getData.meta.total_pages);
+        }
+        if (getData.meta.total === 0 && getData.meta.page !== 1) {
+          setPage(1);
+        }
+      } else {
+        const updateData = getData.data.map((item: DataResponse) => {
+          return { ...item, id: item._id };
+        });
+        setUserList(updateData);
+        setTotalUsers(response.data.meta.total);
+        setLoading(false);
+      }
+    } catch (error) {
       setLoading(false);
-    } catch (_error) {
-      setLoading(false);
-      enqueueSnackbar("Unable to fetch user list.", {
-        variant: "error",
-        autoHideDuration: 3000,
-      });
-      setTimeout(
-        () =>
+      setUserList([]);
+      if (axios.isAxiosError(error) && error.response) {
+        if (typeof error.response.data.error === "string") {
+          if (error.response.data.error === "Route not found.") {
+            enqueueSnackbar("Invalid route, unable to get user list.", {
+              variant: "error",
+              autoHideDuration: 3000,
+            });
+          } else {
+            enqueueSnackbar(error.response.data.error, {
+              variant: "error",
+              autoHideDuration: 3000,
+            });
+          }
+        } else {
           enqueueSnackbar("Something went wrong!", {
             variant: "error",
             autoHideDuration: 3000,
-          }),
-        500
+          });
+        }
+      } else {
+        enqueueSnackbar("Something went wrong!", {
+          variant: "error",
+          autoHideDuration: 3000,
+        });
+      }
+    }
+  };
+
+  const verifyAdminStatusApi = async (
+    userIds: string | string[],
+    status: string
+  ) => {
+    try {
+      const response = await axios.patch(
+        `${base_url}/admin/update_admin_status`,
+        {
+          userIds,
+          status,
+        },
+        {
+          headers: {
+            authorization: `Bearer ${accessToken}`,
+          },
+        }
       );
+      setSelected([]);
+      getUsersList();
+      handleModalClose();
+      if (
+        response.data.meta &&
+        response.data.meta.requestedCount !== response.data.meta.modifiedCount
+      ) {
+        setSuccessModalMeta({
+          totalCount: response.data.meta.requestedCount,
+          totalChange: response.data.meta.modifiedCount,
+          totalSkiped:
+            response.data.meta.requestedCount -
+            response.data.meta.modifiedCount,
+        });
+        setShowSuccessModal("forStatus");
+      } else {
+        enqueueSnackbar("Admin status updated successfully", {
+          variant: "success",
+          autoHideDuration: 3000,
+        });
+      }
+    } catch (error) {
+      handleModalClose();
+      if (axios.isAxiosError(error) && error.response) {
+        if (typeof error.response.data.error === "string") {
+          enqueueSnackbar(error.response.data.error, {
+            variant: "error",
+            autoHideDuration: 3000,
+          });
+        } else {
+          enqueueSnackbar("Something went wrong!", {
+            variant: "error",
+            autoHideDuration: 3000,
+          });
+        }
+      } else {
+        enqueueSnackbar("Something went wrong!", {
+          variant: "error",
+          autoHideDuration: 3000,
+        });
+      }
+    }
+  };
+
+  const deletUserApi = async (userIds: string | string[]) => {
+    try {
+      const response = await axios.delete(`${base_url}/admin/delete_users`, {
+        data: {
+          userIds,
+        },
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+      setSelected([]);
+      getUsersList();
+      handleModalClose();
+      if (
+        response.data.meta &&
+        response.data.meta.requestedCount !== response.data.meta.deletedCount
+      ) {
+        setSuccessModalMeta({
+          totalCount: response.data.meta.requestedCount,
+          totalChange: response.data.meta.deletedCount,
+          totalSkiped:
+            response.data.meta.requestedCount - response.data.meta.deletedCount,
+        });
+        setShowSuccessModal("forDelete");
+      } else {
+        enqueueSnackbar("Accounts deleted successfully", {
+          variant: "success",
+          autoHideDuration: 3000,
+        });
+      }
+    } catch (error) {
+      handleModalClose();
+      if (axios.isAxiosError(error) && error.response) {
+        if (typeof error.response.data.error === "string") {
+          enqueueSnackbar(error.response.data.error, {
+            variant: "error",
+            autoHideDuration: 3000,
+          });
+        } else {
+          enqueueSnackbar("Something went wrong!", {
+            variant: "error",
+            autoHideDuration: 3000,
+          });
+        }
+      } else {
+        enqueueSnackbar("Something went wrong!", {
+          variant: "error",
+          autoHideDuration: 3000,
+        });
+      }
     }
   };
 
@@ -330,7 +493,10 @@ export default function UserList() {
   const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
       const newSelected = userList.map((n) => n.id);
-      setSelected(newSelected);
+      const filteredSelected = newSelected.filter(
+        (item) => adminUserId !== item
+      );
+      setSelected(filteredSelected);
       return;
     }
     setSelected([]);
@@ -371,6 +537,8 @@ export default function UserList() {
     [order, orderBy, userList]
   );
 
+  const isAdminExist = visibleRows.some((item) => item.id === adminUserId);
+
   const handleStatusColor = (value: string) => {
     let color = pendingColor;
     if (value === "rejected") {
@@ -387,13 +555,20 @@ export default function UserList() {
     setSelectAdminStatus(null);
   };
 
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(null);
+    setSuccessModalMeta(initialSuccessModalMeta);
+  };
+
   const handleSnackbarClose = () => {
     setSnackbarErrorMessage(null);
     setSnackbarSuccessMessage(null);
   };
 
   const handleAdminStatusChange = (status: SelectedAdminStatus) => {
-    setSelectAdminStatus(status);
+    if (showModal === "adminStatus" || showModal === "selectedAdminStatus") {
+      setSelectAdminStatus(status);
+    }
   };
 
   const handleAdminVeificationClick = (
@@ -492,14 +667,16 @@ export default function UserList() {
 
   const handleModalConfirmClick = () => {
     if (showModal === "confirmStatus") {
-      setSnackbarSuccessMessage(
-        `Admin status changed to ${selectAdminStatus}!`
-      );
+      if (selectedRow && selectAdminStatus) {
+        verifyAdminStatusApi(selectedRow.id, selectAdminStatus);
+      } else if (selected.length > 0 && selectAdminStatus) {
+        verifyAdminStatusApi(selected as string[], selectAdminStatus);
+      }
     } else if (showModal === "confirmDelete") {
-      setSnackbarSuccessMessage("Selected account deleted successfully!");
+      deletUserApi(selected as string[]);
       setSelected([]);
+      handleModalClose();
     }
-    handleModalClose();
   };
 
   const handleDeleteIconClick = () => {
@@ -656,7 +833,7 @@ export default function UserList() {
               orderBy={orderBy}
               onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
-              rowCount={userList.length}
+              rowCount={isAdminExist ? userList.length - 1 : userList.length}
               loading={loading}
             />
             {loading ? (
@@ -700,7 +877,11 @@ export default function UserList() {
                             ...webStyle.tableBodyRowStyle,
                             cursor: "pointer",
                           }}
-                          onClick={(event) => handleClick(event, row.id)}
+                          onClick={(event) => {
+                            if (adminUserId !== row.id) {
+                              handleClick(event, row.id);
+                            }
+                          }}
                         >
                           <TableCell padding="checkbox">
                             <Checkbox
@@ -710,6 +891,7 @@ export default function UserList() {
                                 "aria-labelledby": labelId,
                               }}
                               sx={webStyle.checkBoxCheckedColor}
+                              disabled={adminUserId === row.id}
                             />
                           </TableCell>
                           <TableCell
@@ -760,6 +942,7 @@ export default function UserList() {
                               onClick={(event) =>
                                 handleAdminVeificationClick(event, row)
                               }
+                              disabled={adminUserId === row.id}
                             >
                               {row.adminVerification}
                             </Button>
@@ -900,6 +1083,76 @@ export default function UserList() {
           </Box>
         </Box>
       </Modal>
+      <Modal
+        open={Boolean(showSuccessModal)}
+        onClose={() => handleSuccessModalClose()}
+      >
+        <Box style={webStyle.progressBox}>
+          <Box style={webStyle.addSizeModalInnerBox}>
+            <Box p={1}>
+              <Box sx={webStyle.successModalBodyBox}>
+                <CheckCircleRoundedIcon sx={webStyle.successIconModal} />
+                {showSuccessModal === "forStatus" ? (
+                  <>
+                    <Typography sx={webStyle.successModalMessage}>
+                      Status updated successfully.
+                    </Typography>
+                    <Typography sx={webStyle.successMetaMsgText}>
+                      <span style={{ color: primaryColor }}>
+                        Total users requiest to update:{" "}
+                        {successModalMeta.totalCount}
+                      </span>
+                      <br />
+                      <span style={{ color: approvedColor }}>
+                        Total users updated: {successModalMeta.totalChange}
+                      </span>
+                      <br />
+                      <span style={{ color: rejectedColor }}>
+                        Total users skiped: {successModalMeta.totalSkiped}
+                      </span>
+                    </Typography>
+                  </>
+                ) : (
+                  <>
+                    <Typography sx={webStyle.successModalMessage}>
+                      Accounts deleted successfully
+                    </Typography>
+                    <Typography sx={webStyle.successMetaMsgText}>
+                      <span style={{ color: primaryColor }}>
+                        Total users requiest to delete:{" "}
+                        {successModalMeta.totalCount}
+                      </span>
+                      <br />
+                      <span style={{ color: approvedColor }}>
+                        Total users deleted: {successModalMeta.totalChange}
+                      </span>
+                      <br />
+                      <span style={{ color: rejectedColor }}>
+                        Total users skiped: {successModalMeta.totalSkiped}
+                      </span>
+                    </Typography>
+                  </>
+                )}
+              </Box>
+              <Box
+                style={{
+                  ...webStyle.sizeModalButtonBox,
+                  justifyContent: "flex-end",
+                }}
+              >
+                <AddButton
+                  onClick={() => handleSuccessModalClose()}
+                  style={{
+                    background: primaryColor,
+                  }}
+                >
+                  {consfigJSON.close}
+                </AddButton>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      </Modal>
       <Snackbar
         open={Boolean(snackbarErrorMessage)}
         autoHideDuration={4000}
@@ -995,6 +1248,9 @@ const webStyle = {
     borderRadius: "8px",
     fontSize: "12px",
     fontWeight: "bold",
+    "&.Mui-disabled": {
+      color: "#fff",
+    },
   },
   modalAdminButtonStyle: {
     background: primaryColor,
@@ -1042,6 +1298,37 @@ const webStyle = {
     display: "flex",
     gap: "10px",
     justifyContent: "space-between",
+  },
+  successModalBodyBox: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    padding: "10px",
+    gap: "10px",
+    "@media(max-width: 300px)": {
+      padding: "5px",
+    },
+  } as React.CSSProperties,
+  successIconModal: {
+    color: approvedColor,
+    fontSize: "80px",
+    "@media(max-width: 450px)": {
+      fontSize: "60px",
+    },
+  },
+  successModalMessage: {
+    fontSize: "24px",
+    color: approvedColor,
+    "@media(max-width: 450px)": {
+      fontSize: "18px",
+    },
+  },
+  successMetaMsgText: {
+    width: "100%",
+    fontSize: "17px",
+    "@media(max-width: 450px)": {
+      fontSize: "14px",
+    },
   },
   selectStyle: {
     height: "30px",

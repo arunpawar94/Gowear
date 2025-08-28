@@ -18,7 +18,7 @@ const authMiddleware = async (
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith("Bearer ")) {
-    res.status(401).json({ message: "error", data: "No token provided."});
+    res.status(401).json({ message: "error", error: "No token provided." });
     return;
   }
 
@@ -27,21 +27,25 @@ const authMiddleware = async (
   try {
     const decoded = verifyAccessToken(token);
     if (!decoded || !decoded.id) {
-      res.status(401).json({ message: "Invalid token payload" });
+      res
+        .status(401)
+        .json({ message: "error", error: "Invalid token payload." });
       return;
     }
 
     const user = await User.findById(decoded.id).select("-password");
 
     if (!user) {
-      res.status(401).json({ message: "User not found" });
+      res.status(401).json({ message: "error", error: "User not found." });
       return;
     }
 
     req.user = user;
     next();
   } catch (err) {
-    res.status(401).json({ message: "Invalid or expired token" });
+    res
+      .status(401)
+      .json({ message: "error", error: "Invalid or expired token." });
     return;
   }
 };

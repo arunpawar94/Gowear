@@ -2,6 +2,7 @@ exports.users = "Users";
 exports.view = "view";
 exports.changeAdminApproveStatus = "Change Admin Approve Status:";
 exports.confirm = "confirm";
+exports.close = "close";
 exports.cancel = "cancel";
 exports.change = "change";
 exports.pending = "pending";
