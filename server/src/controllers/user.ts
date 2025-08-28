@@ -10,7 +10,7 @@ import {
 type AdminVerificationType = "pending" | "approved" | "rejected";
 
 export const getAllUsers = async (
-  req: Request,
+  _req: Request,
   res: Response
 ): Promise<void> => {
   try {
@@ -44,10 +44,18 @@ export const createUser = async (
       adminVerification:
         role === "user" ? "approved" : ("pending" as AdminVerificationType),
     };
+    const isValidRole = ["user", "product_manager"].includes(role);
+    if (!isValidRole) {
+      res.status(400).json({
+        message: "error",
+        error: "Value for role can be user or product_manager",
+      });
+      return;
+    }
     const newUser = await createNewUser({
       ...rawData,
       name,
-      email,
+      email: email.trim().toLowerCase(),
       password,
       role,
       methodToSignUpLogin,
@@ -79,7 +87,7 @@ export const authenticateUser = async (
   const { email, password, keepMeLoggedIn, methodToSignUpLogin } = request.body;
 
   const loginCredential = {
-    email,
+    email: email.toLowerCase().trim(),
     password,
     keepMeLoggedIn,
     methodToSignUpLogin,
