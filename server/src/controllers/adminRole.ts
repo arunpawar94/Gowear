@@ -4,6 +4,7 @@ import isNaturalNumberString from "../utils/checkIsNaturalNumberString";
 import checkValidValue from "../utils/checkValidValue";
 import userModel from "../models/userModel";
 import mongoose from "mongoose";
+import checkValidAndExistIds from "../services/checkValidAndExistIds";
 
 interface UsersFilter {
   role?: { $in: RegExp[] };
@@ -75,6 +76,12 @@ export const updateAdminStatus = async (
   response: Response
 ) => {
   const { userIds, status: statusToChange } = requiest.body;
+  if (!userIds) {
+    response
+      .status(400)
+      .json({ message: "error", error: "User's ID is required." });
+    return;
+  }
   const isValidStatus = checkValidValue(
     [statusToChange],
     ["pending", "approved", "rejected"]
@@ -91,24 +98,78 @@ export const updateAdminStatus = async (
       if (!mongoose.Types.ObjectId.isValid(userIds)) {
         response
           .status(400)
-          .json({ message: "error", error: "Invalid userId format" });
+          .json({ message: "error", error: "Invalid userId format." });
         return;
       }
-      const user = await userModel.findByIdAndUpdate(
-        userIds,
-        { $set: { adminVerification: statusToChange } },
-        { new: true }
-      );
-      if (!user) {
+      const getUser = await userModel.findById(userIds, {
+        adminVerification: 1,
+      });
+      if (getUser) {
+        if (getUser.adminVerification === statusToChange) {
+          response.status(404).json({
+            message: "error",
+            error: `Admin status is already ${statusToChange}`,
+          });
+          return;
+        } else {
+          await userModel.findByIdAndUpdate(
+            userIds,
+            { $set: { adminVerification: statusToChange } },
+            { new: true }
+          );
+        }
+      } else {
         response
           .status(404)
           .json({ message: "error", error: "User not exist." });
         return;
       }
-
       response.status(200).json({
         message: "success",
         data: "Admin status updated successfully",
+      });
+      return;
+    }
+    if (Array.isArray(userIds)) {
+      if (userIds.length === 0) {
+        response
+          .status(400)
+          .json({ message: "error", error: "User's ID is required." });
+        return;
+      }
+      const {
+        invalidIds,
+        validIds,
+        validIdsCount,
+        existingDocsCount,
+        existingDocs,
+      } = await checkValidAndExistIds(userIds, userModel);
+      if (validIdsCount === 0) {
+        response
+          .status(400)
+          .json({ message: "error", error: "None of the user ID is valid." });
+        return;
+      }
+      if (existingDocsCount === 0) {
+        response
+          .status(400)
+          .json({ message: "error", error: "None of the user is exist." });
+        return;
+      }
+      const existingUsers = existingDocs.map((item) => item["_id"]);
+      const result = await userModel.updateMany(
+        { _id: { $in: validIds } },
+        { $set: { adminVerification: statusToChange } }
+      );
+      response.status(200).json({
+        message: "success",
+        data: "Admin status updated successfully",
+        meta: {
+          requestedCount: userIds.length,
+          modifiedCount: result.modifiedCount,
+          existingUsers: existingUsers,
+          invalidUserIds: invalidIds,
+        },
       });
       return;
     }
@@ -119,12 +180,84 @@ export const updateAdminStatus = async (
     });
     return;
   }
+};
 
-  // if (Array.isArray(userIds)) {
-  // }
-  // response.status(200).json({
-  //   message: "success",
-  //   data: requiest.body,
-  //   meta: typeof userIds === "string",
-  // });
+export const deleteUsers = async (requiest: Request, response: Response) => {
+  const { userIds } = requiest.body;
+  if (!userIds) {
+    response
+      .status(400)
+      .json({ message: "error", error: "User's ID is required." });
+    return;
+  }
+  try {
+    if (typeof userIds === "string") {
+      if (!mongoose.Types.ObjectId.isValid(userIds)) {
+        response
+          .status(400)
+          .json({ message: "error", error: "Invalid userId format." });
+        return;
+      }
+      const getUser = await userModel.findById(userIds, "_id");
+      if (getUser) {
+        await userModel.findByIdAndDelete(userIds);
+      } else {
+        response
+          .status(404)
+          .json({ message: "error", error: "User not exist." });
+        return;
+      }
+      response.status(200).json({
+        message: "success",
+        data: "Account deleted successfully!",
+      });
+      return;
+    }
+    if (Array.isArray(userIds)) {
+      if (userIds.length === 0) {
+        response
+          .status(400)
+          .json({ message: "error", error: "User's ID is required." });
+        return;
+      }
+      const {
+        invalidIds,
+        validIds,
+        validIdsCount,
+        existingDocsCount,
+        existingDocs,
+      } = await checkValidAndExistIds(userIds, userModel);
+      if (validIdsCount === 0) {
+        response
+          .status(400)
+          .json({ message: "error", error: "None of the user ID is valid." });
+        return;
+      }
+      if (existingDocsCount === 0) {
+        response
+          .status(400)
+          .json({ message: "error", error: "None of the user is exist." });
+        return;
+      }
+      const existingUsers = existingDocs.map((item) => item["_id"]);
+      const result = await userModel.deleteMany({ _id: { $in: validIds } });
+      response.status(200).json({
+        message: "success",
+        data: "Accounts deleted successfully",
+        meta: {
+          requestedCount: userIds.length,
+          deletedCount: result.deletedCount,
+          deletedUsers: existingUsers,
+          invalidUserIds: invalidIds,
+        },
+      });
+      return;
+    }
+  } catch (_errors) {
+    response.status(500).json({
+      message: "error",
+      error: "Server error, Unable to update status.",
+    });
+    return;
+  }
 };
