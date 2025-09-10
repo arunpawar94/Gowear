@@ -28,6 +28,7 @@ import consfigJSON from "./config";
 import { useNavigate } from "react-router-dom";
 import logoutUser from "../services/logout";
 import GradientCircularProgress from "./GradientCircularProgress";
+import { useLocation } from "react-router-dom";
 
 const buttonArray = [
   { label: "Home", address: "" },
@@ -41,6 +42,7 @@ const buttonArray = [
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const dispatch = useDispatch<AppDispatch>();
   const [search, setSearch] = useState("");
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -59,6 +61,10 @@ const Header: React.FC = () => {
   );
   const size450 = useMediaQuery("(min-width:450px)");
   const size800 = useMediaQuery("(min-width:800px)");
+
+  useEffect(() => {
+    setOpenDrawer(false);
+  }, [pathname]);
 
   useEffect(() => {
     if (userInformation.profileImage) {
