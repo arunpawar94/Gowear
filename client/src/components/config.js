@@ -21,3 +21,6 @@ exports.users = "Users";
 exports.orders = "Orders";
 exports.myWishlist = "My Wishlist";
 exports.cart = "Cart";
+exports.addToCart = "Add to cart";
+exports.viewDetail = "View Detail";
+exports.available = "Available";

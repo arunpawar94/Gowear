@@ -77,7 +77,7 @@ const customTheme = createTheme({
   breakpoints: {
     values: {
       xs: 0,
-      xsm: 390,
+      xsm: 400,
       sm: 600,
       md: 1000,
       lg: 1200,

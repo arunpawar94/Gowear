@@ -2,6 +2,8 @@ import { Box, Button, IconButton, Typography, styled } from "@mui/material";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import { primaryColor } from "../config/colors";
+import configJSON from "./config";
+import { useNavigate } from "react-router-dom";
 
 type CartBoxProps = {
   name: string;
@@ -13,6 +15,7 @@ type CartBoxProps = {
 };
 
 export default function CartBox({ product }: { product: CartBoxProps }) {
+  const navigate = useNavigate();
   return (
     <MainBox>
       <Box style={webStyle.imgWrapper}>
@@ -46,10 +49,14 @@ export default function CartBox({ product }: { product: CartBoxProps }) {
             ({product.discount}% off)
           </span>
         </Typography>
-        <Typography style={{ color: "green" }}>Available</Typography>
+        <Typography style={{ color: "green" }}>
+          {configJSON.available}
+        </Typography>
         <Box style={webStyle.buttonBox}>
-          <AddButton>Add to cart</AddButton>
-          <DetailButton>View Detail</DetailButton>
+          <AddButton>{configJSON.addToCart}</AddButton>
+          <DetailButton onClick={() => navigate("/viewDetail")}>
+            {configJSON.viewDetail}
+          </DetailButton>
         </Box>
       </Box>
     </MainBox>
