@@ -29,9 +29,11 @@ import "slick-carousel/slick/slick-theme.css";
 import { primaryColor, lightTextColor } from "../../config/colors";
 import { bannerImage, gowearLogo } from "../../config/assets";
 import CartBox from "../../components/CartBox";
-import consfigJSON from "./config";
+import configJSON from "./config";
 import axios from "axios";
 import CartBoxSkeleton from "../../components/CartBoxSkeleton";
+import GradientCircularProgress from "../../components/GradientCircularProgress";
+import { useNavigate } from "react-router-dom";
 
 const base_url = process.env.REACT_APP_API_URL;
 
@@ -53,12 +55,16 @@ type GetProductsResp = {
 };
 
 const Home: React.FC = () => {
+  const navigate = useNavigate();
   const sharedState = useSelector((state: RootState) => state.shared.cartCount);
   const dispatch = useDispatch<AppDispatch>();
   const size1030 = useMediaQuery("(max-width:1030px)");
   const size930 = useMediaQuery("(max-width:930px)");
   const [products, setProducts] = useState<GetProductsResp[]>([]);
   const [isProductsFetched, setIsProductsFetched] = useState<boolean>(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(2);
+  const [moreLoading, setMoreLoading] = useState(false);
 
   const updateState = () => {
     dispatch(setSharedState(1));
@@ -66,32 +72,36 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     getProducts();
-  }, []);
+  }, [page]);
 
   const getProducts = () => {
     axios
       .get(`${base_url}/products/show_products`, {
         params: {
           per_page: 20,
+          page,
         },
       })
       .then((response) => {
-        const shuffledData = shuffleArray(response.data.data);
-        setProducts(shuffledData);
+        const productsShow = response.data.data;
+        setProducts((prevState) => [...prevState, ...productsShow]);
         setIsProductsFetched(true);
+        setTotalPages(response.data.metadata.totalPages);
+        setMoreLoading(false);
       })
       .catch((_error) => {
         setIsProductsFetched(true);
+        setMoreLoading(false);
       });
   };
 
-  const shuffleArray = (array: GetProductsResp[]) => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
+  const handleMoreViewClick = () => {
+    setPage((prevState) => prevState + 1);
+    setMoreLoading(true);
+  };
+
+  const handleNavigation = (route: string) => {
+    navigate(`/${route}`);
   };
 
   const renderCarousel = () => {
@@ -164,7 +174,15 @@ const Home: React.FC = () => {
             </>
           )}
         </Grid>
-        {products.length > 0 && <AddButton>{consfigJSON.viewMore}</AddButton>}
+        {products.length > 0 && page < totalPages && (
+          <AddButton onClick={handleMoreViewClick}>
+            {moreLoading ? (
+              <GradientCircularProgress size={20} margin="2px 24px" />
+            ) : (
+              configJSON.viewMore
+            )}
+          </AddButton>
+        )}
       </GridBox>
     );
   };
@@ -208,7 +226,7 @@ const Home: React.FC = () => {
       {renderBanner()}
       <Box style={webStyle.categorieMainBox}>
         <Typography style={webStyle.categorieHeadingText}>
-          {consfigJSON.shopByCategories}
+          {configJSON.shopByCategories}
         </Typography>
         <Box
           style={{
@@ -216,14 +234,17 @@ const Home: React.FC = () => {
             padding: size1030 ? "0" : "0 50px",
           }}
         >
-          <Box sx={webStyle.categorieImageBox}>
+          <Box
+            sx={webStyle.categorieImageBox}
+            onClick={() => handleNavigation("categoryClothes/menswear")}
+          >
             <img
               src={mensCategorie}
               alt="mens_categories"
               style={webStyle.categorieImage}
             />
             <Typography style={webStyle.categorieText}>
-              {consfigJSON.mensClothing}
+              {configJSON.mensClothing}
             </Typography>
           </Box>
           {!size930 && (
@@ -235,21 +256,24 @@ const Home: React.FC = () => {
               />
             </Box>
           )}
-          <Box sx={webStyle.categorieImageBox}>
+          <Box
+            sx={webStyle.categorieImageBox}
+            onClick={() => handleNavigation("categoryClothes/womenswear")}
+          >
             <img
               src={womensCategorie}
               alt="womens_categories"
               style={webStyle.categorieImage}
             />
             <Typography style={webStyle.categorieText}>
-              {consfigJSON.womensClothing}
+              {configJSON.womensClothing}
             </Typography>
           </Box>
         </Box>
       </Box>
       <Box style={webStyle.categorieMainBox}>
         <Typography style={webStyle.categorieHeadingText}>
-          {consfigJSON.mensAndWomensClothing}
+          {configJSON.mensAndWomensClothing}
         </Typography>
         <Grid container spacing={3} style={webStyle.subCategorieMainImageBox}>
           {[

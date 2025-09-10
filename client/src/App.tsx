@@ -18,6 +18,9 @@ import { setUserInformationReducer } from "./redux/userInfoSlice";
 import UserList from "./pages/UsersList/UserList";
 import refreshAccessToken from "./services/refreshAccessToken";
 import { SnackbarProvider } from "notistack";
+import CategoryClothes from "./pages/CategoryClothes/CategoryClothes";
+import NoPageFound from "./pages/NoPageFound/NoPageFound";
+import ScrollToTop from "./utils/scrollToTop";
 
 const base_url = process.env.REACT_APP_API_URL;
 
@@ -62,6 +65,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <SnackbarProvider
         maxSnack={8}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
@@ -69,6 +73,10 @@ function App() {
         <Header />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route
+            path="/categoryClothes/:category_param"
+            element={<CategoryClothes />}
+          />
           <Route
             path="/loginSignUp"
             element={
@@ -109,6 +117,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="*" element={<NoPageFound />} />
         </Routes>
         <Footer />
         <SnackbarMsg />

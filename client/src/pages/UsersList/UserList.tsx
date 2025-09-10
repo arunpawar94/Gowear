@@ -318,7 +318,7 @@ export default function UserList() {
         params: params,
       });
       const getData = response.data;
-      if (getData.data.length === 0) {
+      if (getData.data.length === 0 && getData.meta.page > 1) {
         if (
           getData.meta.total > 0 &&
           getData.meta.page > getData.meta.total_pages
@@ -857,7 +857,9 @@ export default function UserList() {
                       sx={{ textAlign: "center" }}
                       height={250}
                     >
-                      <Typography>{consfigJSON.noResultFound}</Typography>
+                      <Typography style={webStyle.noResultFoundText}>
+                        {consfigJSON.noResultFound}
+                      </Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -1241,6 +1243,10 @@ const webStyle = {
     overflow: "hidden",
     whiteSpace: "nowrap",
     textOverflow: "ellipsis",
+  },
+  noResultFoundText: {
+    fontSize: "20px",
+    color: primaryColor,
   },
   buttonStyle: {
     background: primaryColor,

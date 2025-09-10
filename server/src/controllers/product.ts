@@ -7,6 +7,12 @@ interface ProductFilter {
   categorie?: { $regex: RegExp };
   subCategorie?: { $regex: RegExp };
   "colors.sizes.quantity"?: { $gt: number };
+  price?: {
+    $gt?: number;
+    $gte?: number;
+    $lt?: number;
+    $lte?: number;
+  };
 }
 
 export const addProduct = async (
@@ -68,7 +74,7 @@ export const addProduct = async (
 };
 
 export const getProducts = async (req: Request, res: Response) => {
-  let { page, per_page, sub_categorie, available } = req.query;
+  let { page, per_page, sub_categorie, min_price, max_price } = req.query;
   const errors: string[] = [];
   if (page && !isNaturalNumberString(page as string)) {
     errors.push("Invalid page no.");
@@ -76,11 +82,20 @@ export const getProducts = async (req: Request, res: Response) => {
   if (per_page && !isNaturalNumberString(per_page as string)) {
     errors.push("Invalid per page count.");
   }
+  if (min_price && !validPriceCheck(min_price as string)) {
+    errors.push("Invalid minimum price.");
+  }
+  if (max_price && !validPriceCheck(max_price as string)) {
+    errors.push("Invalid maximum price.");
+  }
   if (errors.length > 0) {
     res.status(400).json({ message: "error", errors });
     return;
   }
   try {
+    const pageNum = parseInt(page as string) || 1;
+    const limit = parseInt(per_page as string) || 10;
+    const skip = (pageNum - 1) * limit;
     const filters: ProductFilter = {};
 
     if (typeof req.query.categorie === "string") {
@@ -92,103 +107,43 @@ export const getProducts = async (req: Request, res: Response) => {
       const subCategorie = sub_categorie.toLowerCase();
       filters.subCategorie = { $regex: new RegExp(`^${subCategorie}$`, "i") };
     }
-    if (typeof available === "string") {
-      const availableCheck = available.toLowerCase();
-      if (availableCheck === "true") {
-        filters["colors.sizes.quantity"] = { $gt: 0 };
-      } else if (availableCheck === "false") {
-        let updateFilters = {
-          ...filters,
-          $expr: {
-            $or: [
-              {
-                $gt: [
-                  {
-                    $size: {
-                      $filter: {
-                        input: "$colors",
-                        as: "color",
-                        cond: { $eq: [{ $size: "$$color.sizes" }, 0] },
-                      },
-                    },
-                  },
-                  0,
-                ],
-              },
-              {
-                $eq: [
-                  {
-                    $size: {
-                      $filter: {
-                        input: {
-                          $reduce: {
-                            input: "$colors",
-                            initialValue: [],
-                            in: { $concatArrays: ["$$value", "$$this.sizes"] },
-                          },
-                        },
-                        as: "size",
-                        cond: { $gt: ["$$size.quantity", 0] },
-                      },
-                    },
-                  },
-                  0,
-                ],
-              },
-            ],
-          },
-        };
+
+    if (min_price || max_price) {
+      const min = Number(min_price);
+      const max = Number(max_price);
+
+      if (!isNaN(min)) {
+        filters.price = { $gte: min };
+      }
+      if (!isNaN(max)) {
+        filters.price = { $lte: max };
+      }
+      if (!isNaN(min) && !isNaN(max)) {
+        filters.price = { $gte: min, $lte: max };
       }
     }
-    const productsFiltered = await Product.find(filters);
-    const allProducts = await Product.find();
-    let productsFilterdSliced: IProduct[];
-    let currentPage = Number(page),
-      perPageData = Number(per_page),
-      nextPage: number | null,
-      previousPage: number | null,
-      totalPages: number | null;
-
-    if (productsFiltered.length === 0) {
-      productsFilterdSliced = [];
-      currentPage = 1;
-      nextPage = null;
-      previousPage = null;
-      totalPages = 1;
-    } else {
-      if (!page) {
-        currentPage = 1;
-      }
-      if (!per_page) {
-        perPageData = productsFiltered.length;
-      }
-      const startingIndex = (currentPage - 1) * perPageData;
-      const lastIndexPlusOne = currentPage * perPageData;
-      productsFilterdSliced = productsFiltered.slice(
-        startingIndex,
-        lastIndexPlusOne
-      );
-      totalPages = Math.ceil(productsFiltered.length / perPageData);
-      nextPage = currentPage === totalPages ? null : currentPage + 1;
-      previousPage = currentPage === 1 ? null : currentPage - 1;
-      if (currentPage > totalPages) {
-        nextPage = null;
-        previousPage = totalPages;
-      }
-    }
-
+    const productsFiltered = await Product.find(filters)
+      .skip(skip)
+      .limit(limit);
+    const totalFilteredCount = await Product.countDocuments(filters);
+    const totalCount = await Product.countDocuments();
     const metadata = {
-      currentPage,
-      nextPage,
-      previousPage,
-      totalPages,
-      count: productsFiltered.length,
-      total_count: allProducts.length,
+      currentPage: pageNum,
+      totalPages: Math.ceil(totalFilteredCount / limit),
+      count: totalFilteredCount,
+      total_count: totalCount,
     };
-    res
-      .status(200)
-      .json({ message: "success", data: productsFilterdSliced, metadata });
+    res.status(200).json({
+      message: "success",
+      data: productsFiltered,
+      metadata,
+    });
   } catch (error) {
     res.status(400).json({ message: "error", error: error });
   }
 };
+
+function validPriceCheck(value: string): boolean {
+  const num = Number(value);
+  return !isNaN(num) && num >= 0 && /^\d+(\.\d+)?$/.test(value);
+}
