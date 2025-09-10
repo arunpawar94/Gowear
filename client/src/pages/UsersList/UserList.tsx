@@ -857,7 +857,9 @@ export default function UserList() {
                       sx={{ textAlign: "center" }}
                       height={250}
                     >
-                      <Typography>{consfigJSON.noResultFound}</Typography>
+                      <Typography style={webStyle.noResultFoundText}>
+                        {consfigJSON.noResultFound}
+                      </Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -1241,6 +1243,10 @@ const webStyle = {
     overflow: "hidden",
     whiteSpace: "nowrap",
     textOverflow: "ellipsis",
+  },
+  noResultFoundText: {
+    fontSize: "20px",
+    color: primaryColor,
   },
   buttonStyle: {
     background: primaryColor,

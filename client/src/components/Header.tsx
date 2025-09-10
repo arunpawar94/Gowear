@@ -31,10 +31,10 @@ import GradientCircularProgress from "./GradientCircularProgress";
 
 const buttonArray = [
   { label: "Home", address: "" },
-  { label: "Men's Topwear", address: "" },
-  { label: "Men's Bottomwear", address: "" },
-  { label: "Women's Topwear", address: "" },
-  { label: "Women's Bottomwear", address: "" },
+  { label: "Men", address: "categoryClothes/menswear" },
+  { label: "Women", address: "categoryClothes/womenswear" },
+  { label: "Categorie", address: "" },
+  { label: "About", address: "aboutUs" },
   { label: "Products", address: "addProduct" },
   { label: "Users", address: "showUserlist" },
 ];
@@ -184,12 +184,20 @@ const Header: React.FC = () => {
           <Box sx={webStyle.loginButtonMainBox}>
             {size450 && (
               <>
-                <IconButton aria-label="wishlist" title="Go to Wishlist">
+                <IconButton
+                  aria-label="wishlist"
+                  title="Go to Wishlist"
+                  style={{ height: "fit-content", width: "fit-content" }}
+                >
                   <Badge badgeContent={0} sx={webStyle.badgeCountStyle}>
                     <FavoriteRoundedIcon sx={webStyle.wishCartIcon} />
                   </Badge>
                 </IconButton>
-                <IconButton aria-label="cart" title="Go to Cart">
+                <IconButton
+                  aria-label="cart"
+                  title="Go to Cart"
+                  style={{ height: "fit-content", width: "fit-content" }}
+                >
                   <Badge
                     badgeContent={sharedState}
                     sx={webStyle.badgeCountStyle}
@@ -362,6 +370,7 @@ const webStyle = {
   loginButtonMainBox: {
     display: "flex",
     gap: "10px",
+    alignItems: "center",
     "@media screen and (max-width: 600px)": {
       gap: "0px",
     },

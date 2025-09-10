@@ -23,12 +23,14 @@ export default function CartBox({ product }: { product: CartBoxProps }) {
             <FavoriteBorderIcon style={{ color: "red" }} />
           )}
         </IconButton>
-        <img src={product.imageUrl} alt="product_image" style={webStyle.imgStyle} />
+        <img
+          src={product.imageUrl}
+          alt="product_image"
+          style={webStyle.imgStyle}
+        />
       </Box>
       <Box style={webStyle.detailBox}>
-        <Typography style={webStyle.nameText}>
-          {product.name}
-        </Typography>
+        <Typography style={webStyle.nameText}>{product.name}</Typography>
         <EllipsisTypography style={webStyle.desText}>
           {product.description}
         </EllipsisTypography>
@@ -40,7 +42,9 @@ export default function CartBox({ product }: { product: CartBoxProps }) {
           >
             ₹{product.mrp}
           </span>{" "}
-          <span style={{ ...webStyle.desText, color: "red" }}>({product.discount}% off)</span>
+          <span style={{ ...webStyle.desText, color: "red" }}>
+            ({product.discount}% off)
+          </span>
         </Typography>
         <Typography style={{ color: "green" }}>Available</Typography>
         <Box style={webStyle.buttonBox}>
@@ -90,7 +94,7 @@ const webStyle: { [key: string]: React.CSSProperties } = {
     maxWidth: "220px",
     whiteSpace: "nowrap",
     overflow: "hidden",
-    textOverflow: "ellipsis"
+    textOverflow: "ellipsis",
   },
   buttonBox: {
     marginTop: "10px",
@@ -115,7 +119,7 @@ const webStyle: { [key: string]: React.CSSProperties } = {
   },
   imgStyle: {
     width: "100%",
-    height: "100%",
+    height: "190px",
     maxHeight: "190px",
     objectFit: "contain",
   } as React.CSSProperties,
