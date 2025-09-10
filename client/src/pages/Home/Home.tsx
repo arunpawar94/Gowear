@@ -281,25 +281,34 @@ const Home: React.FC = () => {
               imageValue: mensTopwear,
               altName: "mens_topwear",
               label: "Men's Topwear",
+              urlAddress: "menstopwear",
             },
             {
               imageValue: mensBottomwear,
               altName: "mens_bottomwear",
               label: "Men's Bottomwear",
+              urlAddress: "mensbottomwear",
             },
             {
               imageValue: womensTopwear,
               altName: "womens_topwear",
               label: "Women's Topwear",
+              urlAddress: "womenstopwear",
             },
             {
               imageValue: womensBottomwear,
               altName: "womens_bottomwear",
               label: "Women's Bottomwear",
+              urlAddress: "womensbottomwear",
             },
           ].map((item, index) => (
             <Grid size={{ xs: 12, sm: 6, md: 3, lg: 3 }} key={index}>
-              <Box sx={webStyle.subCatorieImageBox}>
+              <Box
+                sx={webStyle.subCatorieImageBox}
+                onClick={() =>
+                  handleNavigation(`categoryClothes/${item.urlAddress}`)
+                }
+              >
                 <img
                   src={item.imageValue}
                   alt={item.altName}

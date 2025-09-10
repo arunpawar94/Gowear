@@ -190,6 +190,38 @@ export default function CategoryClothes() {
         category: "women",
       };
     }
+    if (categorieParam === "menstopwear") {
+      paramObj = {
+        heading: "Men's Topwear",
+        showSubCategorieFilter: false,
+        category: "men",
+      };
+      setCategoryType("topwear");
+    }
+    if (categorieParam === "mensbottomwear") {
+      paramObj = {
+        heading: "Men's Bottomwear",
+        showSubCategorieFilter: false,
+        category: "men",
+      };
+      setCategoryType("bottomwear");
+    }
+    if (categorieParam === "womenstopwear") {
+      paramObj = {
+        heading: "Women's Topwear",
+        showSubCategorieFilter: false,
+        category: "women",
+      };
+      setCategoryType("topwear");
+    }
+    if (categorieParam === "womensbottomwear") {
+      paramObj = {
+        heading: "Women's Bottomwear",
+        showSubCategorieFilter: false,
+        category: "women",
+      };
+      setCategoryType("bottomwear");
+    }
     setPageParams(paramObj);
   };
 

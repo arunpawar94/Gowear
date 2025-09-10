@@ -2,13 +2,17 @@ import { Box, Button, Typography } from "@mui/material";
 import React from "react";
 import consfigJSON from "./config";
 import { primaryColor } from "../../config/colors";
+import { useNavigate } from "react-router-dom";
 
 export default function NoPageFound() {
+  const navigate = useNavigate();
   return (
     <Box style={webStyle.mainBox}>
       <Typography sx={webStyle.codeText}>{consfigJSON.notFoundCode}</Typography>
       <Typography sx={webStyle.msgText}>{consfigJSON.notFoundMsg}</Typography>
-      <Button sx={webStyle.buttonStyle}>{consfigJSON.goHome}</Button>
+      <Button sx={webStyle.buttonStyle} onClick={() => navigate("/")}>
+        {consfigJSON.goHome}
+      </Button>
     </Box>
   );
 }
