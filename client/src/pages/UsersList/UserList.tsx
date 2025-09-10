@@ -318,7 +318,7 @@ export default function UserList() {
         params: params,
       });
       const getData = response.data;
-      if (getData.data.length === 0) {
+      if (getData.data.length === 0 && getData.meta.page > 1) {
         if (
           getData.meta.total > 0 &&
           getData.meta.page > getData.meta.total_pages
