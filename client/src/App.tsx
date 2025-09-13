@@ -21,6 +21,7 @@ import { SnackbarProvider } from "notistack";
 import CategoryClothes from "./pages/CategoryClothes/CategoryClothes";
 import NoPageFound from "./pages/NoPageFound/NoPageFound";
 import ScrollToTop from "./utils/scrollToTop";
+import ViewDetail from "./pages/ViewDetail/ViewDetail";
 
 const base_url = process.env.REACT_APP_API_URL;
 
@@ -73,6 +74,7 @@ function App() {
         <Header />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/viewDetail" element={<ViewDetail />} />
           <Route
             path="/categoryClothes/:category_param"
             element={<CategoryClothes />}
