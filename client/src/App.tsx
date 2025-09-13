@@ -22,6 +22,8 @@ import CategoryClothes from "./pages/CategoryClothes/CategoryClothes";
 import NoPageFound from "./pages/NoPageFound/NoPageFound";
 import ScrollToTop from "./utils/scrollToTop";
 import ViewDetail from "./pages/ViewDetail/ViewDetail";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 const base_url = process.env.REACT_APP_API_URL;
 

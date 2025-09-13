@@ -24,3 +24,7 @@ exports.cart = "Cart";
 exports.addToCart = "Add to cart";
 exports.viewDetail = "View Detail";
 exports.available = "Available";
+exports.detail = "Detail";
+exports.price = "Price";
+exports.mrp = "M.R.P";
+exports.viewMore = "View More";
