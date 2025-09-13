@@ -1,4 +1,4 @@
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography, Grid2 as Grid } from "@mui/material";
 import mensTopwear from "../../assets/mensTopwear.png";
 import mensBottomwear from "../../assets/mensBottomwear.jpg";
 import womensTopwear from "../../assets/womensTopwear.jpg";
@@ -13,6 +13,20 @@ import {
 import configJSON from "./config";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import CarouselCart from "../../components/CarouselCart";
+import Slider from "react-slick";
+import Banner from "../../components/Banner";
+import CartBoxContainer from "../../components/CartBoxContainer";
+
+const dataObject = {
+  name: "Scott International Shirt for Men",
+  description:
+    "Women's Short Sleeve Button-Down Shirt | Printed Casual Crop Top | Stylish Collared Shirt for Women | Oversized Shirt for Woman",
+  price: 677,
+  mrp: 1200,
+  discount: 56,
+  imageUrl: mensTopwear,
+};
 
 export default function ViewDetail() {
   const renderImageSelectBox = (
@@ -29,75 +43,171 @@ export default function ViewDetail() {
       </Box>
     );
   };
+
+  const renderCarousel = () => {
+    const settings = {
+      dots: false,
+      infinite: true,
+      speed: 500,
+      slidesToShow: 8,
+      slidesToScroll: 8,
+    };
+    return (
+      <div className="slider-container">
+        <Slider {...settings}>
+          {Array(10)
+            .fill(null)
+            .map((_, index) => (
+              <CarouselCart product={dataObject} />
+            ))}
+        </Slider>
+      </div>
+    );
+  };
+
   const renderDetailView = () => {
     return (
       <Box style={webStyle.mainDetailBox}>
-        <Box style={webStyle.detailLeftBox}>
-          <Box style={webStyle.detailLeftArrayBox}>
-            {Array(5)
-              .fill(null)
-              .map((_item, index) =>
-                renderImageSelectBox(mensTopwear, index, undefined)
-              )}
-          </Box>
-          <img src={mensTopwear} />
-        </Box>
-        <Box>
-          <Typography style={webStyle.categorieLabel}>
-            Men Collection
-          </Typography>
-          <Typography style={webStyle.productName}>
-            Scott International Shirt for Men
-          </Typography>
-          <Typography sx={webStyle.mrpText}>
-            <span>₹1699</span> <span>(56% OFF)</span>
-          </Typography>
-          <Typography style={webStyle.priceText}>₹ 747.56</Typography>
-          <Box>
-            <Typography style={webStyle.colorText}>Color</Typography>
-            <Box style={webStyle.colorArrayBox}>
+        <Box style={webStyle.mainDetailTopBox}>
+          <Box style={webStyle.detailLeftBox}>
+            <Box style={webStyle.detailLeftArrayBox}>
               {Array(5)
                 .fill(null)
                 .map((_item, index) =>
-                  renderImageSelectBox(mensTopwear, index, "dark Navy")
+                  renderImageSelectBox(mensTopwear, index, undefined)
                 )}
             </Box>
+            <img src={mensTopwear} />
           </Box>
           <Box>
-            <Typography style={webStyle.colorText}>Select Size</Typography>
-            <Box style={webStyle.sizeArrayBox}>
-              {configJSON.sizeArray.map((item, index) => (
-                <Box key={index} sx={webStyle.sizeBox}>
-                  <Typography>{item}</Typography>
-                </Box>
-              ))}
+            <Typography style={webStyle.categorieLabel}>
+              Men Collection
+            </Typography>
+            <Typography style={webStyle.productName}>
+              Scott International Shirt for Men
+            </Typography>
+            <Typography sx={webStyle.mrpText}>
+              <span>₹1699</span> <span>(56% OFF)</span>
+            </Typography>
+            <Typography style={webStyle.priceText}>₹ 747.56</Typography>
+            <Box>
+              <Typography style={webStyle.colorText}>
+                {configJSON.color}
+              </Typography>
+              <Box style={webStyle.colorArrayBox}>
+                {Array(5)
+                  .fill(null)
+                  .map((_item, index) =>
+                    renderImageSelectBox(mensTopwear, index, "dark Navy")
+                  )}
+              </Box>
+            </Box>
+            <Box>
+              <Typography style={webStyle.colorText}>
+                {configJSON.selectSize}
+              </Typography>
+              <Box style={webStyle.sizeArrayBox}>
+                {configJSON.sizeArray.map((item, index) => (
+                  <Box key={index} sx={webStyle.sizeBox}>
+                    <Typography>{item}</Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+            <Typography style={webStyle.inStockText}>In Stock</Typography>
+            <Box style={webStyle.buttonBox}>
+              <Button style={webStyle.activeButton}>
+                <FavoriteRoundedIcon sx={webStyle.wishCartIcon} />
+                {configJSON.wishlist}
+              </Button>
+              <Button style={webStyle.activeButton}>
+                <ShoppingCartIcon sx={webStyle.wishCartIcon} />
+                {configJSON.addToCart}
+              </Button>
             </Box>
           </Box>
-          <Typography style={webStyle.inStockText}>In Stock</Typography>
-          <Box style={webStyle.buttonBox}>
-            <Button style={webStyle.activeButton}>
-              <FavoriteRoundedIcon sx={webStyle.wishCartIcon} />
-              Wishlist
-            </Button>
-            <Button style={webStyle.activeButton}>
-              <ShoppingCartIcon sx={webStyle.wishCartIcon} />
-              Add to cart
-            </Button>
-          </Box>
+        </Box>
+        <Box style={webStyle.mainDetailSecondBox}>
+          <Typography style={webStyle.detailDesTextBox}>
+            {configJSON.productDescription}:
+          </Typography>
+          <Typography>
+            Women's Short Sleeve Button-Down Shirt | Printed Casual Crop Top |
+            Stylish Collared Shirt for Women | Oversized Shirt for Woman
+          </Typography>
         </Box>
       </Box>
     );
   };
-  return <Box>{renderDetailView()}</Box>;
+
+  const renderCategoryBlock = () => {
+    return (
+      <Box>
+        <Box style={webStyle.categoryTopBox}>
+          <Typography style={webStyle.headingOneText}>Men Topwear</Typography>
+          <Box>
+            <Grid container spacing={3}>
+              {Array(8)
+                .fill(null)
+                .map((_, index) => (
+                  <Grid key={index} size={{ xs: 12, sm: 4, md: 3, lg: 1.5 }}>
+                    <CarouselCart product={dataObject} />
+                  </Grid>
+                ))}
+            </Grid>
+          </Box>
+        </Box>
+        <Box style={webStyle.categoryTopBox}>
+          <Typography style={webStyle.headingOneText}>
+            More in Men Category
+          </Typography>
+          <Box>{renderCarousel()}</Box>
+        </Box>
+      </Box>
+    );
+  };
+
+  return (
+    <Box>
+      {renderDetailView()}
+      {renderCategoryBlock()}
+      <Banner />
+      <CartBoxContainer />
+    </Box>
+  );
 }
 
 const webStyle = {
   mainDetailBox: {
     display: "flex",
     gap: "25px",
+    justifyContent: "center",
+    flexDirection: "column",
+  } as CSSProperties,
+  headingOneText: {
+    textTransform: "uppercase",
+    fontSize: "25px",
+    marginBottom: "10px",
+  } as CSSProperties,
+  categoryTopBox: {
+    borderBottom: "1px solid lightgray",
+    padding: "20px 30px",
+  },
+  mainDetailTopBox: {
+    display: "flex",
+    gap: "25px",
     margin: "auto",
     justifyContent: "center",
     padding: "20px 0",
+  },
+  mainDetailSecondBox: {
+    padding: "20px",
+    borderBottom: "1px solid lightgray",
+  },
+  detailDesTextBox: {
+    fontWeight: "bold",
+    marginBottom: "2px",
+    fontSize: "18px",
   },
   detailLeftBox: {
     display: "flex",

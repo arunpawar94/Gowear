@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Box,
   Typography,
   styled,
   Grid2 as Grid,
-  Button,
   useMediaQuery,
 } from "@mui/material";
 import { useSelector, useDispatch } from "react-redux";
@@ -23,36 +22,13 @@ import womensTopwear from "../../assets/womensTopwear.jpg";
 import womensBottomwear from "../../assets/womensBottomwear.jpg";
 
 import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
 
 import { primaryColor, lightTextColor } from "../../config/colors";
-import { bannerImage, gowearLogo } from "../../config/assets";
-import CartBox from "../../components/CartBox";
+import { gowearLogo } from "../../config/assets";
 import configJSON from "./config";
-import axios from "axios";
-import CartBoxSkeleton from "../../components/CartBoxSkeleton";
-import GradientCircularProgress from "../../components/GradientCircularProgress";
 import { useNavigate } from "react-router-dom";
-
-const base_url = process.env.REACT_APP_API_URL;
-
-interface ColorsInterface {
-  name: string;
-  images: { imgUrl: string }[];
-  sizes: { name: string; quantity: number }[];
-}
-
-type GetProductsResp = {
-  name: string;
-  description: string;
-  categorie: "men" | "women";
-  subCategorie: "topwear" | "bottomwear";
-  price: number;
-  mrp: number;
-  discount: number;
-  colors: ColorsInterface[];
-};
+import Banner from "../../components/Banner";
+import CartBoxContainer from "../../components/CartBoxContainer";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -60,44 +36,9 @@ const Home: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const size1030 = useMediaQuery("(max-width:1030px)");
   const size930 = useMediaQuery("(max-width:930px)");
-  const [products, setProducts] = useState<GetProductsResp[]>([]);
-  const [isProductsFetched, setIsProductsFetched] = useState<boolean>(false);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(2);
-  const [moreLoading, setMoreLoading] = useState(false);
 
   const updateState = () => {
     dispatch(setSharedState(1));
-  };
-
-  useEffect(() => {
-    getProducts();
-  }, [page]);
-
-  const getProducts = () => {
-    axios
-      .get(`${base_url}/products/show_products`, {
-        params: {
-          per_page: 20,
-          page,
-        },
-      })
-      .then((response) => {
-        const productsShow = response.data.data;
-        setProducts((prevState) => [...prevState, ...productsShow]);
-        setIsProductsFetched(true);
-        setTotalPages(response.data.metadata.totalPages);
-        setMoreLoading(false);
-      })
-      .catch((_error) => {
-        setIsProductsFetched(true);
-        setMoreLoading(false);
-      });
-  };
-
-  const handleMoreViewClick = () => {
-    setPage((prevState) => prevState + 1);
-    setMoreLoading(true);
   };
 
   const handleNavigation = (route: string) => {
@@ -129,101 +70,11 @@ const Home: React.FC = () => {
     );
   };
 
-  const handleCartProductDetail = (product: GetProductsResp) => {
-    let imageUrl = "";
-    product.colors.forEach((item) => {
-      const checkAvailability = item.sizes.some(
-        (sizeItem) => sizeItem.quantity > 0
-      );
-      if (checkAvailability) {
-        imageUrl = item.images[0].imgUrl;
-      }
-    });
-    const dataObject = {
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      mrp: product.mrp,
-      discount: product.discount,
-      imageUrl,
-    };
-    return dataObject;
-  };
-
-  const renderCartBox = () => {
-    return (
-      <GridBox>
-        <Grid container spacing={3}>
-          {isProductsFetched ? (
-            <>
-              {products.map((item, index) => (
-                <Grid size={{ xs: 12, sm: 4, md: 3, lg: 2.4 }} key={index}>
-                  <CartBox product={handleCartProductDetail(item)} />
-                </Grid>
-              ))}
-            </>
-          ) : (
-            <>
-              {Array(10)
-                .fill(null)
-                .map((_item, index) => (
-                  <Grid size={{ xs: 12, sm: 4, md: 3, lg: 2.4 }} key={index}>
-                    <CartBoxSkeleton />
-                  </Grid>
-                ))}
-            </>
-          )}
-        </Grid>
-        {products.length > 0 && page < totalPages && (
-          <AddButton onClick={handleMoreViewClick}>
-            {moreLoading ? (
-              <GradientCircularProgress size={20} margin="2px 24px" />
-            ) : (
-              configJSON.viewMore
-            )}
-          </AddButton>
-        )}
-      </GridBox>
-    );
-  };
-
-  const renderBanner = () => {
-    return (
-      <BannerBox>
-        <Box>
-          <Typography style={webStyle.bannerText}>
-            Discover the
-            <br />
-            <span style={webStyle.shadowText}>perfect</span>
-            <br />
-            blend of style
-            <br />
-            <span style={webStyle.shadowText}>and</span>
-            <br />
-            confort
-          </Typography>
-        </Box>
-        <Box>
-          <Box style={webStyle.bannerImageWrapper}>
-            <Box style={webStyle.bannerImageBackBox}></Box>
-            <Box style={webStyle.bannerImageBox}>
-              <img
-                src={bannerImage}
-                style={webStyle.bannerImage}
-                alt="banner_image"
-              />
-            </Box>
-          </Box>
-        </Box>
-      </BannerBox>
-    );
-  };
-
   return (
     <Box mb={3}>
       {renderCarousel()}
-      {renderCartBox()}
-      {renderBanner()}
+      <CartBoxContainer />
+      <Banner />
       <Box style={webStyle.categorieMainBox}>
         <Typography style={webStyle.categorieHeadingText}>
           {configJSON.shopByCategories}
@@ -275,7 +126,7 @@ const Home: React.FC = () => {
         <Typography style={webStyle.categorieHeadingText}>
           {configJSON.mensAndWomensClothing}
         </Typography>
-        <Grid container spacing={3} style={webStyle.subCategorieMainImageBox}>
+        <Grid container spacing={3}>
           {[
             {
               imageValue: mensTopwear,
@@ -342,35 +193,6 @@ const StyledSliderWrapper = styled("div")({
 const StyledDots = styled("ul")({
   position: "absolute",
   bottom: "12px !important",
-});
-
-const AddButton = styled(Button)({
-  background: primaryColor,
-  color: "#fff",
-  textTransform: "none",
-});
-
-const GridBox = styled(Box)({
-  maxWidth: "85%",
-  margin: "20px auto",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  gap: "25px",
-  "@media (max-width: 900px)": {
-    maxWidth: "100%",
-    margin: "20px",
-  },
-});
-
-const BannerBox = styled(Box)({
-  background: "#000",
-  padding: "50px 0px",
-  display: "flex",
-  flexWrap: "wrap",
-  justifyContent: "space-evenly",
-  alignItems: "center",
-  gap: "30px",
 });
 
 const webStyle = {
@@ -454,37 +276,4 @@ const webStyle = {
     alignItems: "center",
     flexWrap: "wrap",
   } as React.CSSProperties,
-  subCategorieMainImageBox: {},
-  bannerText: {
-    color: lightTextColor,
-    fontSize: "35px",
-    fontWeight: 600,
-    textTransform: "uppercase",
-  } as React.CSSProperties,
-  shadowText: {
-    fontSize: "35px",
-    color: "#000",
-    WebkitTextStroke: `0.5px ${lightTextColor}`,
-  },
-  bannerImageWrapper: {
-    position: "relative",
-    height: "300px",
-    width: "200px",
-  } as React.CSSProperties,
-  bannerImageBackBox: {
-    position: "absolute",
-    background: primaryColor,
-    width: "200px",
-    height: "300px",
-    zIndex: 0,
-    rotate: "-6deg",
-  } as React.CSSProperties,
-  bannerImageBox: {
-    top: 0,
-    position: "absolute",
-    zIndex: 1,
-  } as React.CSSProperties,
-  bannerImage: {
-    width: "200px",
-  },
 };
