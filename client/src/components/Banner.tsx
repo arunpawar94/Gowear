@@ -18,7 +18,7 @@ export default function Banner() {
           confort
         </Typography>
       </Box>
-      <Box>
+      <Box sx={webStyle.mainImageBox}>
         <Box style={webStyle.bannerImageWrapper}>
           <Box style={webStyle.bannerImageBackBox}></Box>
           <Box style={webStyle.bannerImageBox}>
@@ -40,6 +40,7 @@ const webStyle = {
     fontSize: "35px",
     fontWeight: 600,
     textTransform: "uppercase",
+    padding: "0px 5px",
   } as React.CSSProperties,
   shadowText: {
     fontSize: "35px",
@@ -66,6 +67,12 @@ const webStyle = {
   } as React.CSSProperties,
   bannerImage: {
     width: "200px",
+  },
+  mainImageBox: {
+    paddingRight: "15px",
+    "@media(max-width: 400px)": {
+      paddingRight: "0px !important",
+    },
   },
 };
 
