@@ -1,4 +1,3 @@
-import mensTopwear from "../assets/mensTopwear.png";
 import { Box, IconButton, Typography, styled } from "@mui/material";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
@@ -25,7 +24,9 @@ export default function CarouselCart({ product }: { product: CartBoxProps }) {
             <FavoriteBorderIcon style={{ color: "red" }} />
           )}
         </IconButton>
-        <img src={mensTopwear} alt="product_image" style={webStyle.imgStyle} />
+        <Box sx={webStyle.imgBox}>
+          <img src={product.imageUrl} alt="product_image" />
+        </Box>
       </Box>
       <Box sx={webStyle.detailBox}>
         <Typography style={webStyle.nameText}>{product.name}</Typography>
@@ -95,10 +96,16 @@ const webStyle = {
     position: "absolute",
     right: "0px",
   } as React.CSSProperties,
-  imgStyle: {
-    width: "100%",
-    height: "110px",
-    maxHeight: "110px",
-    objectFit: "contain",
-  } as React.CSSProperties,
+  imgBox: {
+    "& img:first-of-type": {
+      height: "110px",
+      maxHeight: "110px",
+      width: "100%",
+      objectFit: "contain",
+      "@media(max-width: 400px)": {
+        height: "210px",
+        maxHeight: "210px",
+      },
+    },
+  },
 };

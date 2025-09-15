@@ -60,6 +60,7 @@ export default function CartBoxContainer() {
 
   const handleMoreViewClick = () => {
     setPage((prevState) => prevState + 1);
+    setTotalPages((prevState) => prevState + 1);
     setMoreLoading(true);
   };
 
