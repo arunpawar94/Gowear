@@ -12,9 +12,9 @@ interface UsersFilter {
   adminVerification?: { $in: RegExp[] };
 }
 
-export const showUsers = async (requiest: Request, response: Response) => {
+export const showUsers = async (request: Request, response: Response) => {
   let { page, per_page, role, emailVerified, adminVerification } =
-    requiest.query;
+    request.query;
   const errors: string[] = [];
   if (page && !isNaturalNumberString(page as string)) {
     errors.push("Invalid page no.");
@@ -72,10 +72,10 @@ export const showUsers = async (requiest: Request, response: Response) => {
 };
 
 export const updateAdminStatus = async (
-  requiest: Request,
+  request: Request,
   response: Response
 ) => {
-  const { userIds, status: statusToChange } = requiest.body;
+  const { userIds, status: statusToChange } = request.body;
   if (!userIds) {
     response
       .status(400)
@@ -182,8 +182,8 @@ export const updateAdminStatus = async (
   }
 };
 
-export const deleteUsers = async (requiest: Request, response: Response) => {
-  const { userIds } = requiest.body;
+export const deleteUsers = async (request: Request, response: Response) => {
+  const { userIds } = request.body;
   if (!userIds) {
     response
       .status(400)

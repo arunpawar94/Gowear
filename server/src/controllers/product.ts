@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
-import Product, { IProduct } from "../models/productModel";
+import Product from "../models/productModel";
 import cloudinary from "../config/cloudinaryConfig";
 import isNaturalNumberString from "../utils/checkIsNaturalNumberString";
+import mongoose from "mongoose";
 
 interface ProductFilter {
   categorie?: { $regex: RegExp };
@@ -140,6 +141,49 @@ export const getProducts = async (req: Request, res: Response) => {
     });
   } catch (error) {
     res.status(400).json({ message: "error", error: error });
+  }
+};
+
+export const getProductDetail = async (
+  request: Request,
+  response: Response
+) => {
+  const { productId, categorie, subCategorie } = request.query;
+  if (!productId) {
+    response
+      .status(400)
+      .json({ message: "error", error: "User's ID is required." });
+    return;
+  } else {
+    if (!mongoose.Types.ObjectId.isValid(productId as string)) {
+      response
+        .status(400)
+        .json({ message: "error", error: "Invalid product ID format." });
+      return;
+    }
+    try {
+      const getProduct = await Product.findById(productId);
+      const productsSubCategorieFiltered = await Product.find({
+        subCategorie,
+        categorie,
+      }).limit(8);
+      const productsCategorieFiltered = await Product.find({ categorie }).limit(
+        24
+      );
+      response.status(200).json({
+        message: "success",
+        data: {
+          productDetail: getProduct,
+          subCategorieProducts: productsSubCategorieFiltered,
+          categorieProducts: productsCategorieFiltered,
+        },
+      });
+    } catch (error) {
+      response
+        .status(400)
+        .json({ message: "error", error: "Something went wrong." });
+      return;
+    }
   }
 };
 
