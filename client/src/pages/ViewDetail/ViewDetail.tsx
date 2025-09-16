@@ -6,16 +6,14 @@ import {
   createTheme,
   ThemeProvider,
 } from "@mui/material";
-import mensTopwear from "../../assets/mensTopwear.png";
-import mensBottomwear from "../../assets/mensBottomwear.jpg";
-import womensTopwear from "../../assets/womensTopwear.jpg";
-import womensBottomwear from "../../assets/womensBottomwear.jpg";
-import { CSSProperties } from "react";
+import { CSSProperties, useEffect, useState } from "react";
 import {
   approvedColor,
   errorColor,
   lightTextColor,
+  pendingColor,
   primaryColor,
+  rejectedColor,
 } from "../../config/colors";
 import configJSON from "./config";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
@@ -24,6 +22,10 @@ import CarouselCart from "../../components/CarouselCart";
 import Slider from "react-slick";
 import Banner from "../../components/Banner";
 import CartBoxContainer from "../../components/CartBoxContainer";
+import { useLocation, useParams } from "react-router-dom";
+import axios from "axios";
+
+const base_url = process.env.REACT_APP_API_URL;
 
 declare module "@mui/material/styles" {
   interface BreakpointOverrides {
@@ -49,25 +51,168 @@ const customTheme = createTheme({
   },
 });
 
-const dataObject = {
-  name: "Scott International Shirt for Men",
-  description:
-    "Women's Short Sleeve Button-Down Shirt | Printed Casual Crop Top | Stylish Collared Shirt for Women | Oversized Shirt for Woman",
-  price: 677,
-  mrp: 1200,
-  discount: 56,
-  imageUrl: womensBottomwear,
+interface ColorsInterface {
+  name: string;
+  images: { imgUrl: string }[];
+  sizes: { name: string; quantity: number }[];
+}
+
+interface ProductDetail {
+  _id: string;
+  name: string;
+  description: string;
+  price: number;
+  mrp: number;
+  discount: number;
+  colors: ColorsInterface[];
+  categorie: "men" | "women";
+  subCategorie: "topwear" | "bottomwear";
+}
+
+const intialProductDetail = {
+  _id: "",
+  name: "",
+  description: "",
+  price: 0,
+  mrp: 0,
+  discount: 0,
+  colors: [],
+  categorie: "men" as ProductDetail["categorie"],
+  subCategorie: "topwear" as ProductDetail["subCategorie"],
+};
+
+const initialSelectedColorValue = {
+  name: "",
+  images: [],
+  sizes: [],
 };
 
 export default function ViewDetail() {
+  const { id: productId } = useParams();
+  const query = new URLSearchParams(useLocation().search);
+  const categorie = query.get("categorie");
+  const subCategorie = query.get("subCategorie");
+  const color = query.get("color");
+  const [productDetail, setProductDetail] =
+    useState<ProductDetail>(intialProductDetail);
+
+  const [imageArray, setImageArray] = useState<string[]>([]);
+  const [selectedColor, setSelectedColor] = useState<ColorsInterface>(
+    initialSelectedColorValue
+  );
+  const [selectedSize, setSelectedSize] = useState<{
+    name: string;
+    quantity: number;
+  }>({ name: "", quantity: 5 });
+  const [categorieProductArr, setCategorieProductArr] = useState<
+    ProductDetail[]
+  >([]);
+  const [subCategorieProductArr, setSubCategorieProductArr] = useState<
+    ProductDetail[]
+  >([]);
+  const [selectdImage, setSelectedImage] = useState<string>("");
+  const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [totalColorCount, setTotalColorCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    getProduct();
+  }, [productId]);
+
+  const getProduct = () => {
+    axios
+      .get(`${base_url}/products/show_product_detail`, {
+        params: {
+          productId,
+          categorie,
+          subCategorie,
+        },
+      })
+      .then((response) => {
+        const productDetailData: ProductDetail =
+          response.data.data.productDetail;
+        const colorsArrayResp = productDetailData.colors;
+        const selectedColorItem = colorsArrayResp.find(
+          (item) => item.name === color
+        );
+        const imageArrayResp = selectedColorItem
+          ? selectedColorItem.images.map((item) => item.imgUrl)
+          : [];
+        setProductDetail(productDetailData);
+        setImageArray(imageArrayResp);
+        setSelectedImage(imageArrayResp[0]);
+        setSelectedColor(
+          selectedColorItem ? selectedColorItem : initialSelectedColorValue
+        );
+        setSelectedSize({ name: "", quantity: 5 });
+        setCategorieProductArr(response.data.data.categorieProducts);
+        setSubCategorieProductArr(response.data.data.subCategorieProducts);
+        if (selectedColorItem) {
+          setTotalColorCount(getTotalColorCount(selectedColorItem.sizes));
+        }
+        setTotalCount(getTotalCount(colorsArrayResp));
+      })
+      .catch((_error) => {});
+  };
+
+  const getTotalColorCount = (
+    array: { name: string; quantity: number }[]
+  ): number => {
+    return array.reduce((acc, item) => {
+      return acc + item.quantity;
+    }, 0);
+  };
+
+  const getTotalCount = (array: ColorsInterface[]) => {
+    return array.reduce(
+      (acc, item) => (acc += getTotalColorCount(item.sizes)),
+      0
+    );
+  };
+
+  const handleImageSelectClick = (
+    imageUrl: string,
+    name: undefined | string,
+    index: number
+  ) => {
+    if (name) {
+      setSelectedColor(productDetail.colors[index]);
+      const imageList = productDetail.colors[index].images.map(
+        (item) => item.imgUrl
+      );
+      setTotalColorCount(getTotalColorCount(productDetail.colors[index].sizes));
+      setImageArray(imageList);
+      setSelectedImage(imageUrl);
+      const checkSize = productDetail.colors[index].sizes.some((item) => {
+        if (item.name === selectedSize.name && item.quantity > 0) {
+          setSelectedSize(item);
+          return true;
+        } else {
+          return false;
+        }
+      });
+      if (!checkSize) {
+        setSelectedSize({ name: "", quantity: 5 });
+      }
+    } else {
+      setSelectedImage(imageUrl);
+    }
+  };
+
   const renderImageSelectBox = (
     imageUrl: string,
     index: number,
-    name: undefined | string
+    name: undefined | string,
+    selected: boolean
   ) => {
     return (
       <Box key={index}>
-        <Box sx={webStyle.selectImageBox}>
+        <Box
+          sx={{
+            ...webStyle.selectImageBox,
+            borderColor: selected ? primaryColor : "gray",
+          }}
+          onClick={() => handleImageSelectClick(imageUrl, name, index)}
+        >
           <img src={imageUrl} style={webStyle.selectImage} />
         </Box>
         {name && <Typography style={webStyle.colorName}>{name}</Typography>}
@@ -130,67 +275,138 @@ export default function ViewDetail() {
     return (
       <div className="slider-container">
         <Slider {...settings}>
-          {Array(10)
-            .fill(null)
-            .map((_, index) => (
-              <CarouselCart key={index} product={dataObject} />
-            ))}
+          {categorieProductArr.map((item, index) => {
+            const dataObject = {
+              productId: item._id,
+              name: item.name,
+              description: item.description,
+              price: item.price,
+              mrp: item.mrp,
+              discount: item.discount,
+              imageUrl: item.colors[0].images[0].imgUrl,
+              categorie: item.categorie,
+              subCategorie: item.subCategorie,
+              color: item.colors[0].name,
+            };
+            return <CarouselCart key={index} product={dataObject} />;
+          })}
         </Slider>
       </div>
     );
   };
 
   const renderDetailView = () => {
+    const getSizeArray: { name: string; quantity: number }[] = [];
+    configJSON.sizeArray.forEach((item) => {
+      selectedColor.sizes.forEach((newItem) => {
+        if (newItem.name === item) {
+          getSizeArray.push(newItem);
+        }
+      });
+    });
     return (
       <Box sx={webStyle.mainDetailBox}>
         <Box style={webStyle.mainDetailTopBox}>
           <Box sx={webStyle.detailLeftBox}>
             <Box sx={webStyle.detailLeftArrayBox}>
-              {Array(8)
-                .fill(null)
-                .map((_item, index) =>
-                  renderImageSelectBox(mensTopwear, index, undefined)
-                )}
+              {imageArray.map((item, index) =>
+                renderImageSelectBox(
+                  item,
+                  index,
+                  undefined,
+                  item === selectdImage
+                )
+              )}
             </Box>
-            <img src={womensTopwear} style={webStyle.mainImage} />
+            <Box sx={webStyle.mainImageBox}>
+              <img src={selectdImage} style={webStyle.mainImage} />
+            </Box>
           </Box>
           <Box>
             <Typography style={webStyle.categorieLabel}>
-              Men Collection
+              {categorie} Collection
             </Typography>
             <Typography sx={webStyle.productName}>
-              Scott International Shirt for Men ASDFJASK JDFA SDFJ ASJD FJASJD
-              FHAWUETHJKSD JF HA
+              {productDetail.name}
             </Typography>
             <Typography sx={webStyle.mrpText}>
-              <span>₹1699</span> <span>(56% OFF)</span>
+              <span>₹{productDetail.mrp}</span>{" "}
+              <span>({productDetail.discount}% OFF)</span>
             </Typography>
-            <Typography style={webStyle.priceText}>₹ 747.56</Typography>
+            <Typography style={webStyle.priceText}>
+              ₹ {productDetail.price}
+            </Typography>
             <Box>
               <Typography style={webStyle.colorText}>
                 {configJSON.color}
               </Typography>
               <Box sx={webStyle.colorArrayBox}>
-                {Array(10)
-                  .fill(null)
-                  .map((_item, index) =>
-                    renderImageSelectBox(mensTopwear, index, "dark Navy")
-                  )}
+                {productDetail.colors.map((item, index) => {
+                  const imageUrl = item.images[0].imgUrl;
+                  return renderImageSelectBox(
+                    imageUrl,
+                    index,
+                    item.name,
+                    item.name === selectedColor.name
+                  );
+                })}
               </Box>
             </Box>
-            <Box>
-              <Typography style={webStyle.colorText}>
-                {configJSON.selectSize}
-              </Typography>
-              <Box sx={webStyle.sizeArrayBox}>
-                {configJSON.sizeArray.map((item, index) => (
-                  <Box key={index} sx={webStyle.sizeBox}>
-                    <Typography>{item}</Typography>
+            {typeof totalColorCount === "number" &&
+              totalColorCount > 0 &&
+              getSizeArray.length > 0 && (
+                <Box>
+                  <Typography style={webStyle.colorText}>
+                    {configJSON.selectSize}
+                  </Typography>
+                  <Box sx={webStyle.sizeArrayBox}>
+                    {getSizeArray.map((item, index) => (
+                      <>
+                        {item.quantity > 0 && (
+                          <Box
+                            key={index}
+                            sx={{
+                              ...webStyle.sizeBox,
+                              backgroundColor:
+                                item.name === selectedSize.name
+                                  ? primaryColor
+                                  : lightTextColor,
+                              color:
+                                item.name === selectedSize.name
+                                  ? "#fff"
+                                  : "#000",
+                            }}
+                            onClick={() => setSelectedSize(item)}
+                          >
+                            <Typography>{item.name}</Typography>
+                          </Box>
+                        )}
+                      </>
+                    ))}
                   </Box>
-                ))}
-              </Box>
-            </Box>
-            <Typography style={webStyle.inStockText}>In Stock</Typography>
+                </Box>
+              )}
+            {totalCount === 0 ||
+            totalColorCount === 0 ||
+            selectedSize.quantity < 1 ? (
+              <Typography
+                style={{ ...webStyle.inStockText, color: rejectedColor }}
+              >
+                Out Of Stock
+              </Typography>
+            ) : (
+              <>
+                {selectedSize.quantity > 0 && selectedSize.quantity < 3 ? (
+                  <Typography
+                    style={{ ...webStyle.inStockText, color: pendingColor }}
+                  >
+                    Only {selectedSize.quantity} Left
+                  </Typography>
+                ) : (
+                  <Typography style={webStyle.inStockText}>In Stock</Typography>
+                )}
+              </>
+            )}
             <Box sx={webStyle.buttonBox}>
               <Button style={webStyle.activeButton}>
                 <FavoriteRoundedIcon sx={webStyle.wishCartIcon} />
@@ -207,10 +423,7 @@ export default function ViewDetail() {
           <Typography style={webStyle.detailDesTextBox}>
             {configJSON.productDescription}:
           </Typography>
-          <Typography>
-            Women's Short Sleeve Button-Down Shirt | Printed Casual Crop Top |
-            Stylish Collared Shirt for Women | Oversized Shirt for Woman
-          </Typography>
+          <Typography>{productDetail.description}</Typography>
         </Box>
       </Box>
     );
@@ -221,25 +434,39 @@ export default function ViewDetail() {
       <ThemeProvider theme={customTheme}>
         <Box>
           <Box style={webStyle.categoryTopBox}>
-            <Typography style={webStyle.headingOneText}>Men Topwear</Typography>
+            <Typography style={webStyle.headingOneText}>
+              {categorie} {subCategorie}
+            </Typography>
             <Box>
               <Grid container spacing={3}>
-                {Array(8)
-                  .fill(null)
-                  .map((_, index) => (
+                {subCategorieProductArr.map((item, index) => {
+                  const dataObject = {
+                    productId: item._id,
+                    name: item.name,
+                    description: item.description,
+                    price: item.price,
+                    mrp: item.mrp,
+                    discount: item.discount,
+                    imageUrl: item.colors[0].images[0].imgUrl,
+                    categorie: item.categorie,
+                    subCategorie: item.subCategorie,
+                    color: item.colors[0].name,
+                  };
+                  return (
                     <Grid
                       key={index}
                       size={{ xs: 12, xsm: 6, sm: 4, md: 3, lg: 1.5 }}
                     >
                       <CarouselCart product={dataObject} />
                     </Grid>
-                  ))}
+                  );
+                })}
               </Grid>
             </Box>
           </Box>
           <Box style={webStyle.categoryTopBox}>
             <Typography style={webStyle.headingOneText}>
-              More in Men Category
+              More in {categorie} Category
             </Typography>
             <Box>{renderCarousel()}</Box>
           </Box>
@@ -292,9 +519,16 @@ const webStyle = {
       padding: "0px 10px 10px",
     },
   },
+  mainImageBox: {
+    width: "480px",
+    "@media(max-width: 600px)": {
+      width: "100%",
+    },
+  },
   mainImage: {
     width: "100%",
     maxWidth: "480px",
+    maxHeight: "540px",
     objectFit: "contain",
   } as CSSProperties,
   detailDesTextBox: {
@@ -389,7 +623,6 @@ const webStyle = {
     },
   },
   sizeBox: {
-    backgroundColor: lightTextColor,
     width: "45px",
     height: "45px",
     display: "flex",

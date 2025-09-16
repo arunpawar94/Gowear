@@ -76,7 +76,7 @@ function App() {
         <Header />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/viewDetail" element={<ViewDetail />} />
+          <Route path="/viewDetail/:id" element={<ViewDetail />} />
           <Route
             path="/categoryClothes/:category_param"
             element={<CategoryClothes />}

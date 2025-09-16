@@ -16,6 +16,7 @@ interface ColorsInterface {
 }
 
 type GetProductsResp = {
+  _id: string;
   name: string;
   description: string;
   categorie: "men" | "women";
@@ -65,25 +66,35 @@ export default function CartBoxContainer() {
   };
 
   const handleCartProductDetail = (product: GetProductsResp) => {
-    let imageUrl = "";
-    product.colors.forEach((item) => {
+    let imageUrl = "",
+      colorName = "";
+    product.colors.some((item) => {
       const checkAvailability = item.sizes.some(
         (sizeItem) => sizeItem.quantity > 0
       );
       if (checkAvailability) {
         imageUrl = item.images[0].imgUrl;
+        colorName = item.name;
+        return true;
+      } else {
+        return false;
       }
     });
     const dataObject = {
+      productId: product._id,
       name: product.name,
       description: product.description,
       price: product.price,
       mrp: product.mrp,
       discount: product.discount,
       imageUrl,
+      categorie: product.categorie,
+      subCategorie: product.subCategorie,
+      color: colorName,
     };
     return dataObject;
   };
+
   return (
     <GridBox>
       <Grid container spacing={3}>

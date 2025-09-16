@@ -1,6 +1,10 @@
 import { Router, Request, Response, NextFunction } from "express";
 import upload from "../config/multerConfig";
-import { addProduct, getProducts } from "../controllers/product";
+import {
+  addProduct,
+  getProducts,
+  getProductDetail,
+} from "../controllers/product";
 import {
   productValidator,
   validateImageFiles,
@@ -33,5 +37,6 @@ router.post(
 );
 
 router.get("/show_products", getProducts);
+router.get("/show_product_detail", getProductDetail);
 
 export default router;

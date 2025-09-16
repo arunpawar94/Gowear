@@ -3,17 +3,23 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import { primaryColor } from "../config/colors";
 import configJSON from "./config";
+import { useNavigate } from "react-router-dom";
 
 type CartBoxProps = {
+  productId: string;
   name: string;
   description: string;
   price: number;
   mrp: number;
   discount: number;
   imageUrl: string;
+  categorie: string;
+  subCategorie: string;
+  color: string;
 };
 
 export default function CarouselCart({ product }: { product: CartBoxProps }) {
+  const navigate = useNavigate();
   return (
     <MainBox>
       <Box style={webStyle.imgWrapper}>
@@ -47,7 +53,16 @@ export default function CarouselCart({ product }: { product: CartBoxProps }) {
         <Typography style={{ color: "green" }}>
           {configJSON.available}
         </Typography>
-        <Typography style={webStyle.detailText}>{configJSON.detail}</Typography>
+        <Typography
+          style={webStyle.detailText}
+          onClick={() =>
+            navigate(
+              `/viewDetail/${product.productId}?categorie=${product.categorie}&subCategorie=${product.subCategorie}&color=${product.color}`
+            )
+          }
+        >
+          {configJSON.detail}
+        </Typography>
       </Box>
     </MainBox>
   );

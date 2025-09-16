@@ -6,12 +6,16 @@ import configJSON from "./config";
 import { useNavigate } from "react-router-dom";
 
 type CartBoxProps = {
+  productId: string;
   name: string;
   description: string;
   price: number;
   mrp: number;
   discount: number;
   imageUrl: string;
+  categorie: string;
+  subCategorie: string;
+  color: string;
 };
 
 export default function CartBox({ product }: { product: CartBoxProps }) {
@@ -54,7 +58,13 @@ export default function CartBox({ product }: { product: CartBoxProps }) {
         </Typography>
         <Box style={webStyle.buttonBox}>
           <AddButton>{configJSON.addToCart}</AddButton>
-          <DetailButton onClick={() => navigate("/viewDetail")}>
+          <DetailButton
+            onClick={() =>
+              navigate(
+                `/viewDetail/${product.productId}?categorie=${product.categorie}&subCategorie=${product.subCategorie}&color=${product.color}`
+              )
+            }
+          >
             {configJSON.viewDetail}
           </DetailButton>
         </Box>
