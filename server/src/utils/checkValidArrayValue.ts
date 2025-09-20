@@ -1,4 +1,4 @@
-export default function checkValidValue(
+export default function checkValidArrayValue(
   arrayGet: string[],
   arrayValid: string[]
 ) {

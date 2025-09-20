@@ -5,3 +5,4 @@ export const errorColor = "#f44336";
 export const pendingColor = "#FF8F00";
 export const approvedColor = "#388e3c";
 export const rejectedColor = "#d32f2f";
+export const buyButtonColor = "#ffa41c";
