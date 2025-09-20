@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Users from "../models/userModel";
 import isNaturalNumberString from "../utils/checkIsNaturalNumberString";
-import checkValidValue from "../utils/checkValidValue";
+import checkValidValue from "../utils/checkValidArrayValue";
 import userModel from "../models/userModel";
 import mongoose from "mongoose";
 import checkValidAndExistIds from "../services/checkValidAndExistIds";

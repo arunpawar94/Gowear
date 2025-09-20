@@ -154,36 +154,35 @@ export const getProductDetail = async (
       .status(400)
       .json({ message: "error", error: "User's ID is required." });
     return;
-  } else {
-    if (!mongoose.Types.ObjectId.isValid(productId as string)) {
-      response
-        .status(400)
-        .json({ message: "error", error: "Invalid product ID format." });
-      return;
-    }
-    try {
-      const getProduct = await Product.findById(productId);
-      const productsSubCategorieFiltered = await Product.find({
-        subCategorie,
-        categorie,
-      }).limit(8);
-      const productsCategorieFiltered = await Product.find({ categorie }).limit(
-        24
-      );
-      response.status(200).json({
-        message: "success",
-        data: {
-          productDetail: getProduct,
-          subCategorieProducts: productsSubCategorieFiltered,
-          categorieProducts: productsCategorieFiltered,
-        },
-      });
-    } catch (error) {
-      response
-        .status(400)
-        .json({ message: "error", error: "Something went wrong." });
-      return;
-    }
+  }
+  if (!mongoose.Types.ObjectId.isValid(productId as string)) {
+    response
+      .status(400)
+      .json({ message: "error", error: "Invalid product ID format." });
+    return;
+  }
+  try {
+    const getProduct = await Product.findById(productId);
+    const productsSubCategorieFiltered = await Product.find({
+      subCategorie,
+      categorie,
+    }).limit(8);
+    const productsCategorieFiltered = await Product.find({ categorie }).limit(
+      24
+    );
+    response.status(200).json({
+      message: "success",
+      data: {
+        productDetail: getProduct,
+        subCategorieProducts: productsSubCategorieFiltered,
+        categorieProducts: productsCategorieFiltered,
+      },
+    });
+  } catch (error) {
+    response
+      .status(400)
+      .json({ message: "error", error: "Something went wrong." });
+    return;
   }
 };
 
