@@ -24,6 +24,9 @@ import ScrollToTop from "./utils/scrollToTop";
 import ViewDetail from "./pages/ViewDetail/ViewDetail";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import Wishlist from "./pages/WishlistCart/WishlistCart";
+import Checkout from "./pages/Checkout/Checkout";
+import About from "./pages/About/About";
 
 const base_url = process.env.REACT_APP_API_URL;
 
@@ -97,6 +100,10 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/wishlist" element={<Wishlist pageName="wishlist" />} />
+          <Route path="/cart" element={<Wishlist pageName="cart" />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/aboutUs" element={<About />} />
           <Route
             path="/auth/signUp"
             element={
