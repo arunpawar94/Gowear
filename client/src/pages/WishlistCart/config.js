@@ -1,0 +1,17 @@
+exports.myWishlist = "My Wishlist";
+exports.color = "Color";
+exports.price = "Price";
+exports.quantity = "Quantity";
+exports.remove = "Remove";
+exports.addToCart = "Add To Cart";
+exports.proceedToBuy = "Proceed To Buy";
+exports.total = "Total";
+exports.summary = "Summary";
+exports.addMoreItems = "Add More Items";
+exports.subtotal = "Subtotal";
+exports.shipping = "Shipping";
+exports.detail = "Detail";
+exports.helpCallMsg = "Need help? Call us at 1-877-707-6272";
+exports.inStock = "In Stock";
+exports.startShopping = "Start Shopping";
+exports.empty = "Empty";

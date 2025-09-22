@@ -64,6 +64,7 @@ const Header: React.FC = () => {
 
   useEffect(() => {
     setOpenDrawer(false);
+    setAnchorEl(null);
   }, [pathname]);
 
   useEffect(() => {
@@ -194,6 +195,7 @@ const Header: React.FC = () => {
                   aria-label="wishlist"
                   title="Go to Wishlist"
                   style={{ height: "fit-content", width: "fit-content" }}
+                  onClick={() => handleNavigation("wishlist")}
                 >
                   <Badge badgeContent={0} sx={webStyle.badgeCountStyle}>
                     <FavoriteRoundedIcon sx={webStyle.wishCartIcon} />
@@ -203,6 +205,7 @@ const Header: React.FC = () => {
                   aria-label="cart"
                   title="Go to Cart"
                   style={{ height: "fit-content", width: "fit-content" }}
+                  onClick={() => handleNavigation("cart")}
                 >
                   <Badge
                     badgeContent={sharedState}
@@ -264,13 +267,19 @@ const Header: React.FC = () => {
           </MenuItem>
           {!size450 && (
             <>
-              <MenuItem onClick={handleMenuClose} sx={webStyle.menuItemStyle}>
+              <MenuItem
+                onClick={() => handleNavigation("wishlist")}
+                sx={webStyle.menuItemStyle}
+              >
                 <Box sx={webStyle.menuItemBox}>
                   <Typography>{consfigJSON.myWishlist}</Typography>
                   <span>2</span>
                 </Box>
               </MenuItem>
-              <MenuItem onClick={handleMenuClose} sx={webStyle.menuItemStyle}>
+              <MenuItem
+                onClick={() => handleNavigation("cart")}
+                sx={webStyle.menuItemStyle}
+              >
                 <Box sx={webStyle.menuItemBox}>
                   <Typography>{consfigJSON.cart}</Typography>
                   <span>3</span>
