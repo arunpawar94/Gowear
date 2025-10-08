@@ -1,1 +1,12 @@
 exports.checkout = "Checkout";
+exports.change = "Change";
+exports.total = "Total";
+exports.summary = "Summary";
+exports.subtotal = "Subtotal";
+exports.shipping = "Shipping";
+exports.proceedToPay = "Proceed To Pay";
+exports.back = "Back";
+exports.viewDefaultAddress = "View Default Address";
+exports.setForDelivery = "Use As Delivery Address";
+exports.add = "Add";
+exports.addressNotAvailable = "Address Not Available!";
