@@ -28,3 +28,4 @@ exports.detail = "Detail";
 exports.price = "Price";
 exports.mrp = "M.R.P";
 exports.viewMore = "View More";
+exports.clear = "Clear";

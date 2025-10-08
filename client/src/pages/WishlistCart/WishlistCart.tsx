@@ -106,6 +106,11 @@ export default function WishlistCart({ pageName }: WishlistProps) {
   const [pageParams, setPageParams] = useState<WishlistParams>(initialParams);
   const [loading, setLoading] = useState(true);
 
+  const match850 = useMediaQuery("(min-width: 850px)");
+  const match740 = useMediaQuery("(min-width: 740px)");
+  const match730 = useMediaQuery("(min-width: 730px)");
+  const match460 = useMediaQuery("(min-width: 460px)");
+
   const handleSelectChange = (
     event: SelectChangeEvent<string>,
     itemId: string
@@ -116,10 +121,6 @@ export default function WishlistCart({ pageName }: WishlistProps) {
     );
     setWishlist(updateWishlist);
   };
-  const match850 = useMediaQuery("(min-width: 850px)");
-  const match740 = useMediaQuery("(min-width: 740px)");
-  const match730 = useMediaQuery("(min-width: 730px)");
-  const match460 = useMediaQuery("(min-width: 460px)");
 
   useEffect(() => {
     if (pageName === "cart") {

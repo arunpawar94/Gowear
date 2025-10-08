@@ -27,6 +27,7 @@ import "slick-carousel/slick/slick-theme.css";
 import Wishlist from "./pages/WishlistCart/WishlistCart";
 import Checkout from "./pages/Checkout/Checkout";
 import About from "./pages/About/About";
+import Test from "./pages/Test";
 
 const base_url = process.env.REACT_APP_API_URL;
 
@@ -104,6 +105,7 @@ function App() {
           <Route path="/cart" element={<Wishlist pageName="cart" />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/aboutUs" element={<About />} />
+          <Route path="/test" element={<Test />} />
           <Route
             path="/auth/signUp"
             element={
