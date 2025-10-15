@@ -10,3 +10,6 @@ exports.viewDefaultAddress = "View Default Address";
 exports.setForDelivery = "Use As Delivery Address";
 exports.add = "Add";
 exports.addressNotAvailable = "Address Not Available!";
+exports.orderPlacedSuccessfully = "Order Placed Successfully!";
+exports.redirectHome = "Redirecting To The Home Screen In...";
+exports.seconds = "seconds";
