@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../redux/store";
 import {
@@ -41,6 +41,7 @@ const buttonArray = [
 ];
 
 const Header: React.FC = () => {
+  const mainBoxRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const dispatch = useDispatch<AppDispatch>();
@@ -48,6 +49,7 @@ const Header: React.FC = () => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [profileImage, setProfileImage] = useState("");
   const [openDrawer, setOpenDrawer] = useState(false);
+  const [navbarOffset, setNavbarOffset] = useState(0);
 
   const sharedState = useSelector((state: RootState) => state.shared.cartCount);
   const userInformation = useSelector(
@@ -72,6 +74,31 @@ const Header: React.FC = () => {
       setProfileImage(userInformation.profileImage);
     }
   }, [userInformation.profileImage]);
+
+  useEffect(() => {
+    if (mainBoxRef.current) {
+      const updateOffset = () => {
+        const rect = mainBoxRef.current!.getBoundingClientRect();
+        let bottomStart = rect.bottom;
+        if (bottomStart === 49) {
+          bottomStart = 45;
+        }
+        if (bottomStart === 60) {
+          bottomStart = 62;
+        }
+        setNavbarOffset(bottomStart);
+      };
+
+      updateOffset();
+      window.addEventListener("resize", updateOffset);
+      window.addEventListener("scroll", updateOffset);
+
+      return () => {
+        window.removeEventListener("resize", updateOffset);
+        window.removeEventListener("scroll", updateOffset);
+      };
+    }
+  }, []);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
@@ -102,14 +129,14 @@ const Header: React.FC = () => {
           style: {
             width: 250,
             borderRadius: "8px",
-            marginTop: size450 ? "64px" : "47px",
+            marginTop: `${parseInt(navbarOffset.toString()) + 1}px`,
           },
         }}
         BackdropProps={{
           sx: {
-            background: size450
-              ? `linear-gradient(to bottom, transparent 63px, rgba(0,0,0,0.5) 63px)`
-              : `linear-gradient(to bottom, transparent 46px, rgba(0,0,0,0.5) 46px)`,
+            background: `linear-gradient(to bottom, transparent ${
+              parseInt(navbarOffset.toString()) + 1
+            }px, rgba(0,0,0,0.5) ${parseInt(navbarOffset.toString()) + 1}px)`,
           },
         }}
         variant="temporary"
@@ -145,7 +172,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <Box style={{ ...webStyle.mainBox }}>
+    <Box ref={mainBoxRef} style={{ ...webStyle.mainBox }}>
       <Box sx={webStyle.mainTopBox} onClick={() => setOpenDrawer(false)}>
         <Box display={"flex"} gap={size450 ? "20px" : "10px"} width={"100%"}>
           {size450 ? (

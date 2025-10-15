@@ -1,7 +1,15 @@
 import { CSSProperties, ReactNode, useEffect, useState } from "react";
-import { Box, Button, Collapse, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Collapse,
+  Modal,
+  Typography,
+  useMediaQuery,
+} from "@mui/material";
 import configJSON from "./config";
 import {
+  approvedColor,
   extraLightPrimaryColor,
   primaryColor,
   rejectedColor,
@@ -9,6 +17,7 @@ import {
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import ExpandLessRoundedIcon from "@mui/icons-material/ExpandLessRounded";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import { useNavigate } from "react-router-dom";
 import AddressModal from "../../components/AddressModal";
 import { useSnackbar } from "notistack";
@@ -48,6 +57,10 @@ export default function Checkout() {
     useState<ModalParams>(initialModalParams);
   const [defaultAddress, setDefaultAddress] = useState<Address | null>(null);
   const [currentAddress, setCurrentAddress] = useState<Address | null>(null);
+  const [timeLeft, setTimeLeft] = useState(10);
+  const [isRunning, setIsRunning] = useState(false);
+
+  const match400 = useMediaQuery("(min-width: 400px)");
 
   useEffect(() => {
     if (defaultAddress === null) {
@@ -64,6 +77,20 @@ export default function Checkout() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      navigate("/");
+    }
+
+    if (!isRunning || timeLeft <= 0) return;
+
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isRunning, timeLeft]);
 
   const handleModalOpen = (openFor: "defaultAddress" | "currentAddress") => {
     if (openFor === "defaultAddress") {
@@ -113,6 +140,8 @@ export default function Checkout() {
   const handlePayClick = () => {
     if (!currentAddress) {
       enqueueSnackbar("Please provide delivery address!", { variant: "error" });
+    } else {
+      setIsRunning(true);
     }
   };
 
@@ -291,6 +320,34 @@ export default function Checkout() {
         okButtonLabel={modalParams.okButtonLabel}
         handleSubmit={handleModalSubmit}
       />
+      <Modal open={isRunning}>
+        <Box style={webStyle.modalMainBox}>
+          <Box style={webStyle.modalBodyBox}>
+            <CheckCircleRoundedIcon
+              style={{ color: approvedColor, fontSize: "60px" }}
+            />
+            <Typography
+              style={{
+                color: approvedColor,
+                fontSize: match400 ? "30px" : "22px",
+              }}
+            >
+              {configJSON.orderPlacedSuccessfully}
+            </Typography>
+            <Typography
+              style={{ color: "#fff", fontSize: match400 ? "18px" : "14px" }}
+            >
+              {configJSON.redirectHome}
+            </Typography>
+            <Typography
+              style={{ color: "#fff", fontSize: match400 ? "18px" : "14px" }}
+            >
+              <span style={{ color: "red", fontSize: "25px" }}>{timeLeft}</span>{" "}
+              {configJSON.seconds}
+            </Typography>
+          </Box>
+        </Box>
+      </Modal>
     </Box>
   );
 }
@@ -371,4 +428,18 @@ const webStyle = {
     background: extraLightPrimaryColor,
     borderRadius: "5px",
   },
+  modalMainBox: {
+    width: "100vw",
+    height: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    background: "#0d0c0dd6",
+  },
+  modalBodyBox: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "18px",
+    alignItems: "center",
+  } as CSSProperties,
 };
