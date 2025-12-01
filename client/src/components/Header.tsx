@@ -160,7 +160,11 @@ const Header: React.FC = () => {
           {buttonArray.map((item, index) => (
             <Box
               key={index}
-              sx={webStyle.drawerButton}
+              sx={
+                pathname === `/${item.address}`
+                  ? webStyle.drawerButtonActive
+                  : webStyle.drawerButton
+              }
               onClick={() => handleNavigation(item.address)}
             >
               {item.label}
@@ -286,7 +290,10 @@ const Header: React.FC = () => {
             "aria-labelledby": "basic-button",
           }}
         >
-          <MenuItem onClick={handleMenuClose} sx={webStyle.menuItemStyle}>
+          <MenuItem
+            onClick={() => handleNavigation("profile")}
+            sx={webStyle.menuItemStyle}
+          >
             {consfigJSON.profile}
           </MenuItem>
           <MenuItem onClick={handleMenuClose} sx={webStyle.menuItemStyle}>
@@ -395,7 +402,16 @@ const webStyle = {
     "&:hover": {
       backgroundColor: extraLightPrimaryColor,
       color: primaryColor,
+      borderRight: `3px solid ${primaryColor}`,
     },
+  },
+  drawerButtonActive: {
+    borderRadius: "4px",
+    padding: "8px",
+    cursor: "pointer",
+    backgroundColor: extraLightPrimaryColor,
+    color: primaryColor,
+    borderRight: `3px solid ${primaryColor}`,
   },
   mainBottomButtonBox: {
     position: "absolute",

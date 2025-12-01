@@ -53,6 +53,7 @@ interface AddressErrors {
   zipCodeErr: string;
   stateErr: string;
   countryErr: string;
+  dobErr: string;
 }
 
 interface CountryStateType {
@@ -68,7 +69,12 @@ interface AddressModalProps {
   handleModalOpen?: () => void;
   handleModalClose: () => void;
   okButtonLabel: string;
-  handleSubmit: (type: string, addressValue: Address) => void;
+  handleSubmit: (
+    type: string,
+    addressValue: Address,
+    dateOfBirth?: string
+  ) => void;
+  dateOfBirth?: string;
 }
 
 const ITEM_HEIGHT = 48;
@@ -102,6 +108,7 @@ const initialErrors = {
   zipCodeErr: "",
   stateErr: "",
   countryErr: "",
+  dobErr: "",
 };
 
 export default function AddressModal(props: AddressModalProps) {
@@ -113,14 +120,14 @@ export default function AddressModal(props: AddressModalProps) {
     type,
     handleSubmit,
     okButtonLabel,
+    dateOfBirth,
   } = props;
-
-  const getAddress = address ? address : initialAddress;
 
   const { enqueueSnackbar } = useSnackbar();
 
   const [checkSubmit, setCheckSubmit] = useState(false);
-  const [newAddress, setNewAddress] = useState<Address>(getAddress);
+  const [newAddress, setNewAddress] = useState<Address>(initialAddress);
+  const [newDateOfBirth, setNewDateOfBirth] = useState<string>("");
   const [errorValues, setErrorValues] = useState<AddressErrors>(initialErrors);
 
   const countries: CountryStateType[] = Country.getAllCountries();
@@ -130,8 +137,16 @@ export default function AddressModal(props: AddressModalProps) {
     : [];
 
   useEffect(() => {
+    const getAddress = address ? address : initialAddress;
+    setNewAddress(getAddress);
+    if (type === "mainAddress") {
+      setNewDateOfBirth(dateOfBirth as string);
+    }
+  }, [modalOpen]);
+
+  useEffect(() => {
     handleErrorsValue();
-  }, [newAddress, checkSubmit]);
+  }, [newAddress, checkSubmit, newDateOfBirth]);
 
   const handleInputChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -174,6 +189,11 @@ export default function AddressModal(props: AddressModalProps) {
     }));
   };
 
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewDateOfBirth(value);
+  };
+
   const handleSelectChange = (
     event: SelectChangeEvent<string>,
     name: string
@@ -190,7 +210,8 @@ export default function AddressModal(props: AddressModalProps) {
       cityError = "",
       zipCodeError = "",
       stateError = "",
-      countryError = "";
+      countryError = "",
+      dobError = "";
     const {
       fullname,
       contactNo,
@@ -237,6 +258,11 @@ export default function AddressModal(props: AddressModalProps) {
     if (!country.trim()) {
       countryError = "Country required*.";
     }
+    if (type === "mainAddress") {
+      if (!newDateOfBirth) {
+        dobError = "Date of birth required*.";
+      }
+    }
     const errorObject = {
       fullnameErr: fullnameError,
       contactNoErr: contactNoError,
@@ -246,6 +272,7 @@ export default function AddressModal(props: AddressModalProps) {
       zipCodeErr: zipCodeError,
       stateErr: stateError,
       countryErr: countryError,
+      dobErr: dobError,
     };
     setErrorValues(errorObject);
   };
@@ -254,6 +281,13 @@ export default function AddressModal(props: AddressModalProps) {
     setCheckSubmit(false);
     setErrorValues(initialErrors);
     setNewAddress(initialAddress);
+    setNewDateOfBirth("");
+  };
+
+  const handleOnClose = () => {
+    setCheckSubmit(false);
+    setErrorValues(initialErrors);
+    handleModalClose();
   };
 
   const handleModalSubmit = () => {
@@ -262,7 +296,12 @@ export default function AddressModal(props: AddressModalProps) {
     if (checkError) {
       enqueueSnackbar("Please fill required fields!", { variant: "error" });
     } else {
-      handleSubmit(type, newAddress);
+      if (type === "mainAddress") {
+        const [year, month, date] = newDateOfBirth.split("-");
+        handleSubmit(type, newAddress, `${date}-${month}-${year}`);
+      } else {
+        handleSubmit(type, newAddress);
+      }
       handleModalClose();
       setCheckSubmit(false);
     }
@@ -286,9 +325,13 @@ export default function AddressModal(props: AddressModalProps) {
         <TextField
           fullWidth
           name={name}
-          type="text"
+          type={name === "dateOfBirth" ? "date" : "text"}
           value={value}
-          onChange={(event) => handleInputChange(event, name)}
+          onChange={(event) =>
+            name === "dateOfBirth"
+              ? handleDateChange(event as React.ChangeEvent<HTMLInputElement>)
+              : handleInputChange(event, name)
+          }
           sx={
             checkSubmit && error
               ? webStyle.inputErrorStyle
@@ -384,12 +427,12 @@ export default function AddressModal(props: AddressModalProps) {
 
   return (
     <>
-      <Modal open={modalOpen} onClose={handleModalClose}>
+      <Modal open={modalOpen} onClose={handleOnClose}>
         <Box style={webStyle.modalMainBox}>
           <Box style={webStyle.modalMainBodyBox}>
             <Box style={webStyle.headingBox}>
               <Typography style={webStyle.headingText}>{heading}</Typography>
-              <IconButton onClick={handleModalClose}>
+              <IconButton onClick={handleOnClose}>
                 <CloseRoundedIcon style={{ color: extraLightPrimaryColor }} />
               </IconButton>
             </Box>
@@ -413,11 +456,32 @@ export default function AddressModal(props: AddressModalProps) {
                   )}
                 </Grid2>
               </Grid2>
-              {renderInput(
-                "Addres Line 1",
-                "addressLineOne",
-                newAddress.addressLineOne,
-                errorValues.addressLineOneErr
+              {type === "mainAddress" ? (
+                <Grid2 container spacing={3}>
+                  <Grid2 size={{ xs: 12, sm: 6, md: 6 }}>
+                    {renderInput(
+                      "Date Of Birth",
+                      "dateOfBirth",
+                      newDateOfBirth,
+                      errorValues.dobErr
+                    )}
+                  </Grid2>
+                  <Grid2 size={{ xs: 12, sm: 6, md: 6 }}>
+                    {renderInput(
+                      "Addres Line 1",
+                      "addressLineOne",
+                      newAddress.addressLineOne,
+                      errorValues.addressLineOneErr
+                    )}
+                  </Grid2>
+                </Grid2>
+              ) : (
+                renderInput(
+                  "Addres Line 1",
+                  "addressLineOne",
+                  newAddress.addressLineOne,
+                  errorValues.addressLineOneErr
+                )
               )}
               {renderInput(
                 "Addres Line 2",
