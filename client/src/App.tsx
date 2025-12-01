@@ -28,6 +28,7 @@ import Wishlist from "./pages/WishlistCart/WishlistCart";
 import Checkout from "./pages/Checkout/Checkout";
 import About from "./pages/About/About";
 import Test from "./pages/Test";
+import Profile from "./pages/Profile/Profile";
 
 const base_url = process.env.REACT_APP_API_URL;
 
@@ -106,6 +107,7 @@ function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/aboutUs" element={<About />} />
           <Route path="/test" element={<Test />} />
+          <Route path="/profile" element={<Profile />} />
           <Route
             path="/auth/signUp"
             element={
