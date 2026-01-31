@@ -7,3 +7,4 @@ exports.cancel = "Cancel";
 exports.submit = "Submit";
 exports.changePassword = "Change Password";
 exports.deleteAccount = "Delete Account";
+exports.confirmCapital = "CONFIRM";

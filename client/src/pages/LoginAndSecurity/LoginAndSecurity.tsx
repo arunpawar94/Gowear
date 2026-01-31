@@ -509,7 +509,7 @@ export default function LoginAndSecurity() {
                 <Box>
                   <Typography mb={1} style={webStyle.inputLabelStyle}>
                     Please enter "
-                    <span style={{ color: errorColor }}>CONFIRM</span>" to
+                    <span style={{ color: errorColor }}>{configJSON.confirmCapital}</span>" to
                     delete account
                     <span style={{ color: errorColor }}>*</span>:
                   </Typography>
