@@ -10,6 +10,7 @@ exports.copyright = "Copyright";
 exports.copyrightSymbol = "©";
 exports.gowear = "Gowear";
 exports.profile = "Profile";
+exports.loginAndSecurity = "Login & Security";
 exports.logout = "Logout";
 exports.home = "Home";
 exports.mensTopwear = "Men's Topwear";

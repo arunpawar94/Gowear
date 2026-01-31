@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 export default function logoutUser(
   dispatch: AppDispatch,
   navigate: ReturnType<typeof useNavigate>,
-  setAnchorEl: Dispatch<SetStateAction<HTMLElement | null>>
+  setAnchorEl?: Dispatch<SetStateAction<HTMLElement | null>>,
 ) {
   axiosApi
     .post("/users/log_out")
@@ -16,9 +16,13 @@ export default function logoutUser(
       dispatch(setAccessToken(null));
       dispatch(clearUserInformationReducer());
       navigate("/");
-      setAnchorEl(null);
+      if (setAnchorEl) {
+        setAnchorEl(null);
+      }
     })
     .catch((_error) => {
-      setAnchorEl(null);
+      if (setAnchorEl) {
+        setAnchorEl(null);
+      }
     });
 }

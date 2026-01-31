@@ -1,0 +1,10 @@
+exports.loginAndSecurity = "Login & Security";
+exports.email = "Email";
+exports.update = "update";
+exports.change = "Change";
+exports.delete = "Delete";
+exports.cancel = "Cancel";
+exports.submit = "Submit";
+exports.changePassword = "Change Password";
+exports.deleteAccount = "Delete Account";
+exports.confirmCapital = "CONFIRM";

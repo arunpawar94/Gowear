@@ -775,49 +775,49 @@ export default function LoginSignUp() {
           )}
           {(resetVerifyAction === "resetVerify" ||
             resetVerifyAction === "signUpVerify") && (
-            <Box>
-              <Box display="flex" gap={2} onPaste={handlePaste}>
-                {otp.map((digit, i) => (
-                  <InputBase
-                    key={i}
-                    inputRef={(el) => (inputRefs.current[i] = el)}
-                    value={digit}
-                    onChange={(e) => handleChange(i, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(e, i)}
-                    inputProps={{ maxLength: 1 }}
-                    style={{
-                      width: "50px",
-                      height: "50px",
-                      textAlign: "center",
-                      fontSize: "20px",
-                      border: `1px solid ${primaryColor}`,
-                      paddingLeft: "18px",
-                      borderRadius: "4px",
-                      backgroundColor: lightTextColor,
-                      boxShadow: "0px 0px 4px 0px #965cf6",
-                      marginTop: "10px",
-                    }}
-                  />
-                ))}
+              <Box>
+                <Box display="flex" gap={2} onPaste={handlePaste}>
+                  {otp.map((digit, i) => (
+                    <InputBase
+                      key={i}
+                      inputRef={(el) => (inputRefs.current[i] = el)}
+                      value={digit}
+                      onChange={(e) => handleChange(i, e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(e, i)}
+                      inputProps={{ maxLength: 1 }}
+                      style={{
+                        width: "50px",
+                        height: "50px",
+                        textAlign: "center",
+                        fontSize: "20px",
+                        border: `1px solid ${primaryColor}`,
+                        paddingLeft: "18px",
+                        borderRadius: "4px",
+                        backgroundColor: lightTextColor,
+                        boxShadow: "0px 0px 4px 0px #965cf6",
+                        marginTop: "10px",
+                      }}
+                    />
+                  ))}
+                </Box>
+                {checkSubmit && otpError && (
+                  <Typography mt={0.5} mb={-2} fontSize={14} color={errorColor}>
+                    {otpError}
+                  </Typography>
+                )}
               </Box>
-              {checkSubmit && otpError && (
-                <Typography mt={0.5} mb={-2} fontSize={14} color={errorColor}>
-                  {otpError}
-                </Typography>
-              )}
-            </Box>
-          )}
+            )}
         </Box>
         <Box style={webStyle.resVerButtonBox}>
           {(resetVerifyAction === "resetVerify" ||
             resetVerifyAction === "signUpVerify") && (
-            <Button
-              style={{ ...webStyle.clearButton, marginTop: "20px" }}
-              onClick={handleResendOtpClick}
-            >
-              {configJSON.resend}
-            </Button>
-          )}
+              <Button
+                style={{ ...webStyle.clearButton, marginTop: "20px" }}
+                onClick={handleResendOtpClick}
+              >
+                {configJSON.resend}
+              </Button>
+            )}
           <Button
             sx={{ ...webStyle.signInButton, marginTop: "20px" }}
             onClick={handleResetSendOtpClick}
