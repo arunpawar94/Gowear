@@ -29,6 +29,7 @@ import Checkout from "./pages/Checkout/Checkout";
 import About from "./pages/About/About";
 import Test from "./pages/Test";
 import Profile from "./pages/Profile/Profile";
+import LoginAndSecurity from "./pages/LoginAndSecurity/LoginAndSecurity";
 
 const base_url = process.env.REACT_APP_API_URL;
 
@@ -102,12 +103,58 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/wishlist" element={<Wishlist pageName="wishlist" />} />
-          <Route path="/cart" element={<Wishlist pageName="cart" />} />
-          <Route path="/checkout" element={<Checkout />} />
+          <Route
+            path="/loginAndSecurity"
+            element={
+              <ProtectedRoute
+                allowedRoles={["admin", "product_manager", "user"]}
+              >
+                <LoginAndSecurity />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wishlist"
+            element={
+              <ProtectedRoute
+                allowedRoles={["admin", "product_manager", "user"]}
+              >
+                <Wishlist pageName="wishlist" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute
+                allowedRoles={["admin", "product_manager", "user"]}
+              >
+                <Wishlist pageName="cart" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute
+                allowedRoles={["admin", "product_manager", "user"]}
+              >
+                <Checkout />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute
+                allowedRoles={["admin", "product_manager", "user"]}
+              >
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/aboutUs" element={<About />} />
           <Route path="/test" element={<Test />} />
-          <Route path="/profile" element={<Profile />} />
           <Route
             path="/auth/signUp"
             element={

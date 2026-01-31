@@ -31,13 +31,12 @@ import GradientCircularProgress from "./GradientCircularProgress";
 import { useLocation } from "react-router-dom";
 
 const buttonArray = [
-  { label: "Home", address: "" },
-  { label: "Men", address: "categoryClothes/menswear" },
-  { label: "Women", address: "categoryClothes/womenswear" },
-  { label: "Categorie", address: "" },
-  { label: "About", address: "aboutUs" },
-  { label: "Products", address: "addProduct" },
-  { label: "Users", address: "showUserlist" },
+  { label: "Home", address: "", authorize: ["user", "product_manager", "admin"], authRequired: false },
+  { label: "Men", address: "categoryClothes/menswear", authorize: ["user", "product_manager", "admin"], authRequired: false },
+  { label: "Women", address: "categoryClothes/womenswear", authorize: ["user", "product_manager", "admin"], authRequired: false },
+  { label: "About", address: "aboutUs", authorize: ["user", "product_manager", "admin"], authRequired: false },
+  { label: "Add New Product", address: "addProduct", authorize: ["product_manager", "admin"], authRequired: true },
+  { label: "Users", address: "showUserlist", authorize: ["admin"], authRequired: true },
 ];
 
 const Header: React.FC = () => {
@@ -134,9 +133,8 @@ const Header: React.FC = () => {
         }}
         BackdropProps={{
           sx: {
-            background: `linear-gradient(to bottom, transparent ${
-              parseInt(navbarOffset.toString()) + 1
-            }px, rgba(0,0,0,0.5) ${parseInt(navbarOffset.toString()) + 1}px)`,
+            background: `linear-gradient(to bottom, transparent ${parseInt(navbarOffset.toString()) + 1
+              }px, rgba(0,0,0,0.5) ${parseInt(navbarOffset.toString()) + 1}px)`,
           },
         }}
         variant="temporary"
@@ -158,17 +156,22 @@ const Header: React.FC = () => {
             </IconButton>
           </Box>
           {buttonArray.map((item, index) => (
-            <Box
-              key={index}
-              sx={
-                pathname === `/${item.address}`
-                  ? webStyle.drawerButtonActive
-                  : webStyle.drawerButton
+            <>
+              {
+                (!item.authRequired || (item.authRequired && accessToken && item.authorize.includes(userInformation.role))) &&
+                <Box
+                  key={index}
+                  sx={
+                    pathname === `/${item.address}`
+                      ? webStyle.drawerButtonActive
+                      : webStyle.drawerButton
+                  }
+                  onClick={() => handleNavigation(item.address)}
+                >
+                  {item.label}
+                </Box>
               }
-              onClick={() => handleNavigation(item.address)}
-            >
-              {item.label}
-            </Box>
+            </>
           ))}
         </Box>
       </Drawer>
@@ -296,6 +299,12 @@ const Header: React.FC = () => {
           >
             {consfigJSON.profile}
           </MenuItem>
+          <MenuItem
+            onClick={() => handleNavigation("loginAndSecurity")}
+            sx={webStyle.menuItemStyle}
+          >
+            {consfigJSON.loginAndSecurity}
+          </MenuItem>
           <MenuItem onClick={handleMenuClose} sx={webStyle.menuItemStyle}>
             {consfigJSON.orders}
           </MenuItem>
@@ -329,13 +338,15 @@ const Header: React.FC = () => {
       {size800 ? (
         <Box style={webStyle.mainBottomBox}>
           {buttonArray.map((item, index) => (
-            <Button
-              key={index}
-              style={webStyle.bottomButtom}
-              onClick={() => handleNavigation(item.address)}
-            >
-              {item.label}
-            </Button>
+            <>
+              {(!item.authRequired || (item.authRequired && accessToken && item.authorize.includes(userInformation.role))) && <Button
+                key={index}
+                style={webStyle.bottomButtom}
+                onClick={() => handleNavigation(item.address)}
+              >
+                {item.label}
+              </Button>
+              }</>
           ))}
         </Box>
       ) : (
