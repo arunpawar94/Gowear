@@ -1,0 +1,10 @@
+exports.myOrders = "My Orders";
+exports.orderDetails = "Order Details";
+exports.date = "Date";
+exports.paymentId = "Payment ID";
+exports.deliveryAddress = "Delivery Address";
+exports.amountPaid = "Amount Paid";
+exports.subTotal = "Sub-Total";
+exports.shippingCharge = "Shipping Charge";
+exports.total = "Total";
+exports.productDetail = "Product Detail";
