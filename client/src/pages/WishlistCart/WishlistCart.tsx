@@ -113,11 +113,11 @@ export default function WishlistCart({ pageName }: WishlistProps) {
 
   const handleSelectChange = (
     event: SelectChangeEvent<string>,
-    itemId: string
+    itemId: string,
   ) => {
     let newValue = event.target.value;
     const updateWishlist = wishlist.map((item) =>
-      item._id === itemId ? { ...item, size: newValue } : item
+      item._id === itemId ? { ...item, size: newValue } : item,
     );
     setWishlist(updateWishlist);
   };
@@ -232,7 +232,7 @@ export default function WishlistCart({ pageName }: WishlistProps) {
               {renderSelect(
                 ["XS", "SM", "M", "L", "XL", "XXL"],
                 item.size ? item.size : "",
-                item._id
+                item._id,
               )}
               {pageName === "cart" && (
                 <Box display={"flex"} gap="10px" alignItems="center" mt={1}>

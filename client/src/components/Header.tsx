@@ -31,12 +31,42 @@ import GradientCircularProgress from "./GradientCircularProgress";
 import { useLocation } from "react-router-dom";
 
 const buttonArray = [
-  { label: "Home", address: "", authorize: ["user", "product_manager", "admin"], authRequired: false },
-  { label: "Men", address: "categoryClothes/menswear", authorize: ["user", "product_manager", "admin"], authRequired: false },
-  { label: "Women", address: "categoryClothes/womenswear", authorize: ["user", "product_manager", "admin"], authRequired: false },
-  { label: "About", address: "aboutUs", authorize: ["user", "product_manager", "admin"], authRequired: false },
-  { label: "Add New Product", address: "addProduct", authorize: ["product_manager", "admin"], authRequired: true },
-  { label: "Users", address: "showUserlist", authorize: ["admin"], authRequired: true },
+  {
+    label: "Home",
+    address: "",
+    authorize: ["user", "product_manager", "admin"],
+    authRequired: false,
+  },
+  {
+    label: "Men",
+    address: "categoryClothes/menswear",
+    authorize: ["user", "product_manager", "admin"],
+    authRequired: false,
+  },
+  {
+    label: "Women",
+    address: "categoryClothes/womenswear",
+    authorize: ["user", "product_manager", "admin"],
+    authRequired: false,
+  },
+  {
+    label: "About",
+    address: "aboutUs",
+    authorize: ["user", "product_manager", "admin"],
+    authRequired: false,
+  },
+  {
+    label: "Add New Product",
+    address: "addProduct",
+    authorize: ["product_manager", "admin"],
+    authRequired: true,
+  },
+  {
+    label: "Users",
+    address: "showUserlist",
+    authorize: ["admin"],
+    authRequired: true,
+  },
 ];
 
 const Header: React.FC = () => {
@@ -52,13 +82,13 @@ const Header: React.FC = () => {
 
   const sharedState = useSelector((state: RootState) => state.shared.cartCount);
   const userInformation = useSelector(
-    (state: RootState) => state.userInfoReducer
+    (state: RootState) => state.userInfoReducer,
   );
   const accessToken = useSelector(
-    (state: RootState) => state.tokenReducer.token
+    (state: RootState) => state.tokenReducer.token,
   );
   const checkRefreshToken = useSelector(
-    (state: RootState) => state.tokenReducer.checkRefreshToken
+    (state: RootState) => state.tokenReducer.checkRefreshToken,
   );
   const size450 = useMediaQuery("(min-width:450px)");
   const size800 = useMediaQuery("(min-width:800px)");
@@ -133,8 +163,9 @@ const Header: React.FC = () => {
         }}
         BackdropProps={{
           sx: {
-            background: `linear-gradient(to bottom, transparent ${parseInt(navbarOffset.toString()) + 1
-              }px, rgba(0,0,0,0.5) ${parseInt(navbarOffset.toString()) + 1}px)`,
+            background: `linear-gradient(to bottom, transparent ${
+              parseInt(navbarOffset.toString()) + 1
+            }px, rgba(0,0,0,0.5) ${parseInt(navbarOffset.toString()) + 1}px)`,
           },
         }}
         variant="temporary"
@@ -157,8 +188,10 @@ const Header: React.FC = () => {
           </Box>
           {buttonArray.map((item, index) => (
             <>
-              {
-                (!item.authRequired || (item.authRequired && accessToken && item.authorize.includes(userInformation.role))) &&
+              {(!item.authRequired ||
+                (item.authRequired &&
+                  accessToken &&
+                  item.authorize.includes(userInformation.role))) && (
                 <Box
                   key={index}
                   sx={
@@ -170,7 +203,7 @@ const Header: React.FC = () => {
                 >
                   {item.label}
                 </Box>
-              }
+              )}
             </>
           ))}
         </Box>
@@ -305,7 +338,10 @@ const Header: React.FC = () => {
           >
             {consfigJSON.loginAndSecurity}
           </MenuItem>
-          <MenuItem onClick={handleMenuClose} sx={webStyle.menuItemStyle}>
+          <MenuItem
+            onClick={() => handleNavigation("myorders")}
+            sx={webStyle.menuItemStyle}
+          >
             {consfigJSON.orders}
           </MenuItem>
           {!size450 && (
@@ -339,14 +375,19 @@ const Header: React.FC = () => {
         <Box style={webStyle.mainBottomBox}>
           {buttonArray.map((item, index) => (
             <>
-              {(!item.authRequired || (item.authRequired && accessToken && item.authorize.includes(userInformation.role))) && <Button
-                key={index}
-                style={webStyle.bottomButtom}
-                onClick={() => handleNavigation(item.address)}
-              >
-                {item.label}
-              </Button>
-              }</>
+              {(!item.authRequired ||
+                (item.authRequired &&
+                  accessToken &&
+                  item.authorize.includes(userInformation.role))) && (
+                <Button
+                  key={index}
+                  style={webStyle.bottomButtom}
+                  onClick={() => handleNavigation(item.address)}
+                >
+                  {item.label}
+                </Button>
+              )}
+            </>
           ))}
         </Box>
       ) : (

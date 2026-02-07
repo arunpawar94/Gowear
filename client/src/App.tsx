@@ -30,6 +30,7 @@ import About from "./pages/About/About";
 import Test from "./pages/Test";
 import Profile from "./pages/Profile/Profile";
 import LoginAndSecurity from "./pages/LoginAndSecurity/LoginAndSecurity";
+import Orders from "./pages/Orders/Orders";
 
 const base_url = process.env.REACT_APP_API_URL;
 
@@ -37,7 +38,7 @@ function App() {
   const dispatch = useDispatch<AppDispatch>();
 
   const intervalId = useSelector(
-    (state: RootState) => state.tokenReducer.intervalId
+    (state: RootState) => state.tokenReducer.intervalId,
   );
 
   useEffect(() => {
@@ -150,6 +151,16 @@ function App() {
                 allowedRoles={["admin", "product_manager", "user"]}
               >
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/myorders"
+            element={
+              <ProtectedRoute
+                allowedRoles={["admin", "product_manager", "user"]}
+              >
+                <Orders />
               </ProtectedRoute>
             }
           />
